@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>نظام الحجوزات الطبية</title>
+    <!-- مكتبة تليجرام الأساسية لربط الويب بالبوت -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* الألوان التلقائية من تليجرام، مع ألوان الدارك نافي كاحتياط */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--tg-theme-bg-color, #0F172A);
+            color: var(--tg-theme-text-color, #E5E7EB);
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding-bottom: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--tg-theme-text-color, #2196F3);
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--tg-theme-hint-color, #94A3B8);
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--tg-theme-hint-color, #2A405C);
+            border-radius: 10px;
+            background-color: var(--tg-theme-secondary-bg-color, #1C2A3D);
+            color: var(--tg-theme-text-color, #ffffff);
+            font-size: 16px; /* لمنع الزوم التلقائي في الآيفون */
+            box-sizing: border-box;
+            transition: all 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--tg-theme-button-color, #2196F3);
+            box-shadow: 0 0 5px rgba(33, 150, 243, 0.5);
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--tg-theme-button-color, #2196F3);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2 class="header">إضافة حجز جديد</h2>
+
+        <!-- بيانات الدخول للحماية -->
+        <div class="form-group">
+            <label>اسم المستخدم (السكرتير)</label>
+            <input type="text" id="username" placeholder="أدخل اسم المستخدم" required>
+        </div>
+        
+        <div class="form-group">
+            <label>كلمة المرور</label>
+            <input type="password" id="password" placeholder="أدخل كلمة المرور" required>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--tg-theme-hint-color, #2A405C); margin: 20px 0;">
+
+        <!-- بيانات الحجز -->
+        <div class="form-group">
+            <label>تسلسل الحجز</label>
+            <input type="number" id="sequence" placeholder="مثال: 15" required>
+        </div>
+
+        <div class="form-group">
+            <label>اسم المريض</label>
+            <input type="text" id="patientName" placeholder="الاسم الثلاثي" required>
+        </div>
+
+        <div class="form-group">
+            <label>رقم الهاتف</label>
+            <!-- type="tel" يفتح لوحة الأرقام في الموبايل مباشرة -->
+            <input type="tel" id="patientPhone" placeholder="07700000000" pattern="[0-9]*" required>
+        </div>
+
+        <div class="form-group">
+            <label>تاريخ الحجز</label>
+            <input type="date" id="reservationDate" required>
+        </div>
+
+        <div class="form-group">
+            <label>الطبيب المعالج</label>
+            <select id="doctorSelect" required>
+                <option value="" disabled selected>--- اختر الطبيب ---</option>
+                <!-- يمكنك إضافة الأطباء هنا أو جلبهم برمجياً لاحقاً -->
+                <option value="1">د. شهاب احمد التميمي</option>
+                <option value="2">د. احمد كرار التميمي</option>
+                <option value="3">د. مريم التميمي</option>
+            </select>
+        </div>
+
+        <button class="btn-submit" onclick="submitData()">تأكيد الحجز</button>
+    </div>
+
+    <!-- كود الجافاسكربت لإرسال البيانات للبوت -->
+    <script>
+        // تهيئة واجهة تليجرام
+        let tg = window.Telegram.WebApp;
+        
+        // توسيع التطبيق ليملأ شاشة الموبايل
+        tg.expand();
+
+        // إعلام تليجرام بأن التطبيق جاهز
+        tg.ready();
+
+        function submitData() {
+            // جلب البيانات من الحقول
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const sequence = document.getElementById('sequence').value;
+            const patientName = document.getElementById('patientName').value;
+            const patientPhone = document.getElementById('patientPhone').value;
+            const reservationDate = document.getElementById('reservationDate').value;
+            const doctorId = document.getElementById('doctorSelect').value;
+
+            // التحقق من أن الحقول غير فارغة
+            if(!username || !password || !sequence || !patientName || !patientPhone || !reservationDate || !doctorId) {
+                tg.showAlert("الرجاء تعبئة جميع الحقول أولاً!");
+                return;
+            }
+
+            // تجميع البيانات في كائن JSON
+            const data = {
+                username: username,
+                password: password,
+                sequence: sequence,
+                patientName: patientName,
+                phone: patientPhone,
+                date: reservationDate,
+                doctorId: doctorId
+            };
+
+            // إرسال البيانات المجمعة إلى البوت (سيستلمها تطبيق C# لاحقاً)
+            tg.sendData(JSON.stringify(data));
+            
+            // إغلاق الواجهة والعودة للدردشة بعد الإرسال
+            tg.close();
+        }
+    </script>
+</body>
+</html>
