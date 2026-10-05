@@ -272,7 +272,8 @@
         const GEMINI_API_KEY = "AQ.Ab8RN6K7lFGGHjUcPB2xe0iiwCz-aVSUGiDHqGNQii9527khLg";
         
         // التحقق من أنك قمت بوضع المفتاح
-        if (GEMINI_API_KEY === "AQ.Ab8RN6K7lFGGHjUcPB2xe0iiwCz-aVSUGiDHqGNQii9527khLg" || !GEMINI_API_KEY) {
+       // التحقق من أنك قمت بوضع المفتاح
+        if (!GEMINI_API_KEY) {
             alert("❌ تنبيه: لم تقم بوضع مفتاح Google Gemini في الكود!");
             btnAi.innerText = "تحليل وتعبئة"; btnAi.disabled = false;
             return;
