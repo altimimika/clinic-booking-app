@@ -259,7 +259,7 @@
     }
 
     // ==========================================
-    // 🤖 دالة تحليل البيانات (Google Gemini)
+    // 🤖 دالة تحليل البيانات (Google Gemini) - مع نظام كشف الأخطاء
     // ==========================================
     window.analyzeWithAI = async function() {
         const aiText = document.getElementById('aiInput').value;
@@ -268,13 +268,21 @@
         const btnAi = document.getElementById('btnAi');
         btnAi.innerText = "جاري التحليل... ⏳"; btnAi.disabled = true;
 
-        // ⚠️ ضع مفتاح جيميناي هنا
+        // ⚠️ ضع مفتاح جيميناي هنا بين علامتي التنصيص
         const GEMINI_API_KEY = "AQ.Ab8RN6IhuCvcsyUoxTJC7s0mTnmDgz-fenR7y-83jBrzJ6fUbg";
+        
+        // التحقق من أنك قمت بوضع المفتاح
+        if (GEMINI_API_KEY === "AQ.Ab8RN6IhuCvcsyUoxTJC7s0mTnmDgz-fenR7y-83jBrzJ6fUbg" || !GEMINI_API_KEY) {
+            alert("❌ تنبيه: لم تقم بوضع مفتاح Google Gemini في الكود!");
+            btnAi.innerText = "تحليل وتعبئة"; btnAi.disabled = false;
+            return;
+        }
+
         const todayStr = new Date().toISOString().split('T')[0];
         
         const systemPrompt = `أنت مساعد ذكي لسكرتير عيادة في العراق. تاريخ اليوم هو: ${todayStr}.
         قم باستخراج بيانات الحجز من النص التالي. أرجع النتيجة حصراً بصيغة JSON نظيفة.
-        الحقول المطلوبة: "name", "phone" (إذا لم يذكر اجعله ""), "date" (YYYY-MM-DD), "time" (24h format), "status", "sequence".
+        الحقول المطلوبة: "name", "phone" (إذا لم يذكر اجعله ""), "date" (YYYY-MM-DD), "time" (24h format), "status", "sequence" (إذا لم يذكر رقماً اجعله "").
         النص هو: "${aiText}"`;
 
         try {
@@ -284,25 +292,40 @@
             });
 
             const data = await response.json();
+            
+            // كشف أخطاء جوجل (مثل المفتاح الخاطئ)
+            if (data.error) {
+                alert("❌ خطأ من جوجل: " + data.error.message);
+                btnAi.innerText = "تحليل وتعبئة"; btnAi.disabled = false;
+                return;
+            }
+
             if(data.candidates && data.candidates[0].content.parts[0].text) {
                 let aiResultText = data.candidates[0].content.parts[0].text.trim();
                 aiResultText = aiResultText.replace(/```json/g, "").replace(/```/g, "").trim();
-                const parsed = JSON.parse(aiResultText);
-
-                if(parsed.name) document.getElementById('resName').value = parsed.name;
-                if(parsed.phone !== undefined) document.getElementById('resPhone').value = parsed.phone;
-                if(parsed.date) document.getElementById('resDate').value = parsed.date;
-                if(parsed.time) document.getElementById('resTime').value = parsed.time;
-                if(parsed.status !== undefined) document.getElementById('resStatus').value = parsed.status;
-                if(parsed.sequence) document.getElementById('resSeq').value = parsed.sequence;
                 
-                document.getElementById('aiInput').value = ''; 
-                alert("✨ تم تحليل الصوت وتعبئة الحقول بنجاح! راجعها ثم اضغط حفظ.");
+                try {
+                    const parsed = JSON.parse(aiResultText);
+
+                    if(parsed.name) document.getElementById('resName').value = parsed.name;
+                    if(parsed.phone !== undefined) document.getElementById('resPhone').value = parsed.phone;
+                    if(parsed.date) document.getElementById('resDate').value = parsed.date;
+                    if(parsed.time) document.getElementById('resTime').value = parsed.time;
+                    if(parsed.status !== undefined) document.getElementById('resStatus').value = parsed.status;
+                    if(parsed.sequence) document.getElementById('resSeq').value = parsed.sequence;
+                    
+                    document.getElementById('aiInput').value = ''; 
+                    alert("✨ تم تحليل الصوت وتعبئة الحقول بنجاح!");
+                } catch (parseError) {
+                    alert("❌ خطأ في قراءة بيانات الذكاء الاصطناعي: " + aiResultText);
+                }
             }
-        } catch (error) { alert("حدث خطأ في تحليل البيانات عبر الذكاء الاصطناعي."); }
+        } catch (error) { 
+            alert("❌ حدث خطأ في الاتصال بالإنترنت: " + error.message); 
+        }
+        
         btnAi.innerText = "تحليل وتعبئة"; btnAi.disabled = false;
     }
-
     // ==========================================
     // بقية دوال التطبيق
     // ==========================================
