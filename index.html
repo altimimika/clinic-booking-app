@@ -3,171 +3,300 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>نظام الحجوزات الطبية</title>
-    <!-- مكتبة تليجرام الأساسية لربط الويب بالبوت -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>نظام إدارة العيادة الذكي</title>
+    <!-- لربط التطبيق كـ PWA لاحقاً -->
+    <link rel="manifest" href="manifest.json">
     <style>
-        /* الألوان التلقائية من تليجرام، مع ألوان الدارك نافي كاحتياط */
+        :root {
+            --primary: #2196F3;
+            --bg-color: #0F172A;
+            --card-bg: #1E293B;
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --danger: #EF4444;
+            --success: #10B981;
+        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--tg-theme-bg-color, #0F172A);
-            color: var(--tg-theme-text-color, #E5E7EB);
+            background-color: var(--bg-color);
+            color: var(--text-main);
             margin: 0;
             padding: 20px;
             box-sizing: border-box;
         }
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-            padding-bottom: 20px;
+        .container { max-width: 500px; margin: 0 auto; }
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            animation: fadeIn 0.5s ease;
         }
-        .header {
-            text-align: center;
-            margin-bottom: 25px;
-            color: var(--tg-theme-text-color, #2196F3);
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        h2 { text-align: center; color: var(--primary); margin-top: 0; }
+        .logo-placeholder {
+            width: 80px; height: 80px; background: var(--primary); 
+            border-radius: 50%; margin: 0 auto 20px; 
+            display: flex; align-items: center; justify-content: center;
+            font-size: 35px; box-shadow: 0 0 20px rgba(33, 150, 243, 0.4);
         }
-        .form-group {
-            margin-bottom: 18px;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            color: var(--tg-theme-hint-color, #94A3B8);
-        }
+        
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: var(--text-muted); font-size: 14px;}
         input, select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--tg-theme-hint-color, #2A405C);
-            border-radius: 10px;
-            background-color: var(--tg-theme-secondary-bg-color, #1C2A3D);
-            color: var(--tg-theme-text-color, #ffffff);
-            font-size: 16px; /* لمنع الزوم التلقائي في الآيفون */
-            box-sizing: border-box;
-            transition: all 0.3s;
+            width: 100%; padding: 12px; margin-bottom: 18px;
+            border: 1px solid #334155; border-radius: 8px;
+            background-color: #0F172A; color: white; font-size: 16px;
+            box-sizing: border-box; transition: 0.3s;
         }
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--tg-theme-button-color, #2196F3);
-            box-shadow: 0 0 5px rgba(33, 150, 243, 0.5);
+        input:focus, select:focus { border-color: var(--primary); outline: none; }
+        
+        button {
+            width: 100%; padding: 14px; background-color: var(--primary);
+            color: white; border: none; border-radius: 8px;
+            font-size: 16px; font-weight: bold; cursor: pointer;
+            transition: 0.2s;
         }
-        .btn-submit {
-            width: 100%;
-            padding: 15px;
-            background-color: var(--tg-theme-button-color, #2196F3);
-            color: var(--tg-theme-button-text-color, #ffffff);
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        button:active { transform: scale(0.98); }
+        button.logout-btn { background-color: #334155; margin-top: 15px; }
+        
+        .booking-card {
+            background: #0F172A; border-left: 4px solid var(--primary);
+            padding: 15px; border-radius: 8px; margin-bottom: 12px;
         }
-        .btn-submit:active {
-            transform: scale(0.98);
-        }
+        .booking-card .seq { color: var(--primary); font-size: 18px; font-weight: bold; }
+        
+        /* إخفاء الشاشات برمجياً */
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h2 class="header">إضافة حجز جديد</h2>
-
-        <!-- بيانات الدخول للحماية -->
-        <div class="form-group">
-            <label>اسم المستخدم (السكرتير)</label>
-            <input type="text" id="username" placeholder="أدخل اسم المستخدم" required>
-        </div>
+<div class="container">
+    
+    <!-- 1. شاشة تسجيل الدخول -->
+    <div id="loginScreen" class="card">
+        <div class="logo-placeholder">⚕️</div>
+        <h2>نظام العيادة الذكي</h2>
         
-        <div class="form-group">
-            <label>كلمة المرور</label>
-            <input type="password" id="password" placeholder="أدخل كلمة المرور" required>
-        </div>
-
-        <hr style="border: 0; border-top: 1px solid var(--tg-theme-hint-color, #2A405C); margin: 20px 0;">
-
-        <!-- بيانات الحجز -->
-        <div class="form-group">
-            <label>تسلسل الحجز</label>
-            <input type="number" id="sequence" placeholder="مثال: 15" required>
-        </div>
-
-        <div class="form-group">
-            <label>اسم المريض</label>
-            <input type="text" id="patientName" placeholder="الاسم الثلاثي" required>
-        </div>
-
-        <div class="form-group">
-            <label>رقم الهاتف</label>
-            <!-- type="tel" يفتح لوحة الأرقام في الموبايل مباشرة -->
-            <input type="tel" id="patientPhone" placeholder="07700000000" pattern="[0-9]*" required>
-        </div>
-
-        <div class="form-group">
-            <label>تاريخ الحجز</label>
-            <input type="date" id="reservationDate" required>
-        </div>
-
-        <div class="form-group">
-            <label>الطبيب المعالج</label>
-            <select id="doctorSelect" required>
-                <option value="" disabled selected>--- اختر الطبيب ---</option>
-                <!-- يمكنك إضافة الأطباء هنا أو جلبهم برمجياً لاحقاً -->
-                <option value="1">د. شهاب احمد التميمي</option>
-                <option value="2">د. احمد كرار التميمي</option>
-                <option value="3">د. مريم التميمي</option>
-            </select>
-        </div>
-
-        <button class="btn-submit" onclick="submitData()">تأكيد الحجز</button>
+        <label>الدخول بصلاحية:</label>
+        <select id="roleSelect">
+            <option value="secretary">سكرتير العيادة</option>
+            <option value="doctor">الطبيب</option>
+        </select>
+        
+        <label>كلمة المرور:</label>
+        <input type="password" id="loginPassword" placeholder="أدخل كلمة المرور">
+        
+        <button onclick="login()">تسجيل الدخول</button>
     </div>
 
-    <!-- كود الجافاسكربت لإرسال البيانات للبوت -->
-    <script>
-        // تهيئة واجهة تليجرام
-        let tg = window.Telegram.WebApp;
+    <!-- 2. شاشة السكرتير (إضافة حجز) -->
+    <div id="secretaryScreen" class="card hidden">
+        <h2>إضافة حجز جديد</h2>
         
-        // توسيع التطبيق ليملأ شاشة الموبايل
-        tg.expand();
+        <label>تاريخ الحجز:</label>
+        <input type="date" id="resDate" required>
+        
+        <label>تسلسل الحجز:</label>
+        <input type="number" id="resSeq" placeholder="مثال: 1" required>
+        
+        <label>وقت الحجز:</label>
+        <input type="time" id="resTime" required>
+        
+        <label>اسم المريض:</label>
+        <input type="text" id="resName" placeholder="الاسم الثلاثي" required>
+        
+        <label>رقم الهاتف:</label>
+        <input type="tel" id="resPhone" placeholder="077..." required>
+        
+        <button onclick="saveBooking()" id="btnSave">حفظ الحجز في السحابة</button>
+        <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+    </div>
 
-        // إعلام تليجرام بأن التطبيق جاهز
-        tg.ready();
+    <!-- 3. شاشة الطبيب (لوحة التحكم) -->
+    <div id="doctorScreen" class="card hidden">
+        <h2>حجوزات اليوم</h2>
+        <div style="text-align: center; color: var(--text-muted); margin-bottom: 15px;">
+            تاريخ اليوم: <span id="todayDateLabel"></span>
+        </div>
+        
+        <div id="bookingsList">
+            <!-- ستظهر الحجوزات هنا برمجياً -->
+        </div>
+        
+        <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+    </div>
 
-        function submitData() {
-            // جلب البيانات من الحقول
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const sequence = document.getElementById('sequence').value;
-            const patientName = document.getElementById('patientName').value;
-            const patientPhone = document.getElementById('patientPhone').value;
-            const reservationDate = document.getElementById('reservationDate').value;
-            const doctorId = document.getElementById('doctorSelect').value;
+</div>
 
-            // التحقق من أن الحقول غير فارغة
-            if(!username || !password || !sequence || !patientName || !patientPhone || !reservationDate || !doctorId) {
-                tg.showAlert("الرجاء تعبئة جميع الحقول أولاً!");
-                return;
+<!-- ربط مكتبات Firebase الإصدار 10 -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+    import { getDatabase, ref, push, get, child, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
+
+    // إعدادات قاعدة بياناتك التي أنشأتها
+    const firebaseConfig = {
+      databaseURL: "https://myclinicsystem-f978f-default-rtdb.firebaseio.com/",
+      projectId: "myclinicsystem-f978f",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const CLINIC_CODE = "MyClinic_1"; // مجلد العيادة في السحابة
+
+    // ==========================================
+    // دوال واجهة المستخدم (الواجهة الأمامية)
+    // ==========================================
+    
+    // عند تحميل الصفحة، نضع تاريخ اليوم كافتراضي للسكرتير وللطبيب
+    window.onload = function() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('resDate').value = today;
+        document.getElementById('todayDateLabel').innerText = today;
+        checkAutoLogin();
+    }
+
+    // دالة تسجيل الدخول
+    window.login = function() {
+        const role = document.getElementById('roleSelect').value;
+        const pass = document.getElementById('loginPassword').value;
+
+        // كلمات المرور (للتجربة حالياً: السكرتير 1234، الطبيب 5678)
+        if (role === 'secretary' && pass === '1234') {
+            localStorage.setItem('userRole', 'secretary');
+            showScreen('secretaryScreen');
+        } else if (role === 'doctor' && pass === '5678') {
+            localStorage.setItem('userRole', 'doctor');
+            showScreen('doctorScreen');
+            loadDoctorDashboard(); // تحميل بيانات الطبيب
+        } else {
+            alert("كلمة المرور خاطئة!");
+        }
+    }
+
+    // لتذكر الدخول عند غلق وفتح التطبيق
+    window.checkAutoLogin = function() {
+        const role = localStorage.getItem('userRole');
+        if(role === 'secretary') showScreen('secretaryScreen');
+        else if (role === 'doctor') { showScreen('doctorScreen'); loadDoctorDashboard(); }
+    }
+
+    window.logout = function() {
+        localStorage.removeItem('userRole');
+        document.getElementById('loginPassword').value = '';
+        showScreen('loginScreen');
+    }
+
+    window.showScreen = function(screenId) {
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('secretaryScreen').classList.add('hidden');
+        document.getElementById('doctorScreen').classList.add('hidden');
+        document.getElementById(screenId).classList.remove('hidden');
+    }
+
+    // ==========================================
+    // دوال السكرتير (إضافة ومنع التضارب)
+    // ==========================================
+    window.saveBooking = async function() {
+        const rDate = document.getElementById('resDate').value;
+        const rSeq = document.getElementById('resSeq').value;
+        const rTime = document.getElementById('resTime').value;
+        const rName = document.getElementById('resName').value;
+        const rPhone = document.getElementById('resPhone').value;
+
+        if(!rDate || !rSeq || !rTime || !rName || !rPhone) {
+            alert("يرجى تعبئة جميع الحقول!"); return;
+        }
+
+        const btn = document.getElementById('btnSave');
+        btn.innerText = "جاري التحقق..."; btn.disabled = true;
+
+        try {
+            // 1. قراءة الحجوزات الموجودة في فايربيس لنفس اليوم
+            const bookingsRef = ref(db, `Bookings/${CLINIC_CODE}/${rDate}`);
+            const snapshot = await get(bookingsRef);
+            
+            let isConflict = false;
+            
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                // 2. فحص التضارب (هل التسلسل أو الوقت مستخدم؟)
+                for (let key in data) {
+                    if (data[key].sequence == rSeq) {
+                        alert(`❌ عذراً! التسلسل رقم ${rSeq} محجوز مسبقاً في هذا اليوم.`);
+                        isConflict = true; break;
+                    }
+                    if (data[key].time == rTime) {
+                        alert(`❌ عذراً! الوقت ${rTime} محجوز مسبقاً لمريض آخر.`);
+                        isConflict = true; break;
+                    }
+                }
             }
 
-            // تجميع البيانات في كائن JSON
-            const data = {
-                username: username,
-                password: password,
-                sequence: sequence,
-                patientName: patientName,
-                phone: patientPhone,
-                date: reservationDate,
-                doctorId: doctorId
-            };
+            // 3. إذا لم يوجد تضارب، نقوم بحفظ الحجز
+            if (!isConflict) {
+                const newBooking = {
+                    sequence: parseInt(rSeq),
+                    time: rTime,
+                    patientName: rName,
+                    phone: rPhone,
+                    status: "Pending", // قيد الانتظار لحين سحبه للحاسبة
+                    timestamp: new Date().getTime()
+                };
+                
+                await push(bookingsRef, newBooking);
+                alert("✅ تم حفظ الحجز بنجاح!");
+                
+                // تفريغ الحقول وزيادة التسلسل تلقائياً لتسهيل عمل السكرتير
+                document.getElementById('resName').value = '';
+                document.getElementById('resPhone').value = '';
+                document.getElementById('resSeq').value = parseInt(rSeq) + 1;
+            }
 
-            // إرسال البيانات المجمعة إلى البوت (سيستلمها تطبيق C# لاحقاً)
-            tg.sendData(JSON.stringify(data));
-            
-            // إغلاق الواجهة والعودة للدردشة بعد الإرسال
-            tg.close();
+        } catch (error) {
+            alert("حدث خطأ في الاتصال: " + error.message);
         }
-    </script>
+
+        btn.innerText = "حفظ الحجز في السحابة"; btn.disabled = false;
+    }
+
+    // ==========================================
+    // دوال الطبيب (عرض الحجوزات لحظياً)
+    // ==========================================
+    window.loadDoctorDashboard = function() {
+        // الطبيب يرى حجوزات اليوم كمثال
+        const today = new Date().toISOString().split('T')[0];
+        const bookingsRef = ref(db, `Bookings/${CLINIC_CODE}/${today}`);
+        
+        // onValue تقوم بتحديث القائمة فوراً عند إضافة السكرتير لأي حجز
+        onValue(bookingsRef, (snapshot) => {
+            const listDiv = document.getElementById('bookingsList');
+            listDiv.innerHTML = ''; 
+            
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                // تحويل البيانات لمصفوفة لترتيبها حسب التسلسل
+                const bookingsArray = [];
+                for(let key in data) { bookingsArray.push(data[key]); }
+                
+                bookingsArray.sort((a, b) => a.sequence - b.sequence); // ترتيب تصاعدي
+
+                bookingsArray.forEach(b => {
+                    listDiv.innerHTML += `
+                    <div class="booking-card">
+                        <div class="seq">تسلسل: ${b.sequence}</div>
+                        <div>👤 المريض: ${b.patientName}</div>
+                        <div>🕒 الوقت: ${b.time}</div>
+                        <div>📱 الهاتف: ${b.phone}</div>
+                    </div>`;
+                });
+            } else {
+                listDiv.innerHTML = '<div style="text-align:center; color:#94A3B8; padding:20px;">لا توجد حجوزات لهذا اليوم حتى الآن.</div>';
+            }
+        });
+    }
+</script>
 </body>
 </html>
