@@ -8,7 +8,7 @@
     <style>
         :root {
             --primary: #2196F3; --bg-color: #0F172A; --card-bg: #1E293B;
-            --text-main: #F8FAFC; --text-muted: #94A3B8; --warning: #F59E0B;
+            --text-main: #F8FAFC; --text-muted: #94A3B8; --warning: #F59E0B; --ai-color: #8B5CF6; --success: #10B981;
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -34,26 +34,26 @@
         }
         
         label { display: block; margin-bottom: 8px; font-weight: bold; color: var(--text-muted); font-size: 14px;}
-        input, select {
+        input, select, textarea {
             width: 100%; padding: 12px; margin-bottom: 18px;
             border: 1px solid #334155; border-radius: 8px;
             background-color: #0F172A; color: white; font-size: 16px;
             box-sizing: border-box; transition: 0.3s;
         }
-        input:focus, select:focus { border-color: var(--primary); outline: none; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); outline: none; }
         
         button {
             width: 100%; padding: 14px; background-color: var(--primary);
             color: white; border: none; border-radius: 8px;
-            font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s;
+            font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-bottom: 10px;
         }
         button:active { transform: scale(0.98); }
         button.logout-btn { background-color: #334155; margin-top: 15px; }
-        button.edit-btn { background-color: var(--warning); padding: 8px; width: auto; font-size: 14px; margin-top: 10px; }
+        button.edit-btn { background-color: var(--warning); padding: 8px; width: auto; font-size: 14px; margin-top: 10px; color: #000; }
         
         .booking-card {
             background: #0F172A; border-right: 4px solid var(--primary);
-            padding: 15px; border-radius: 8px; margin-bottom: 12px; position: relative;
+            padding: 15px; border-radius: 8px; margin-bottom: 12px;
         }
         .booking-card .seq { color: var(--primary); font-size: 18px; font-weight: bold; margin-bottom: 5px;}
         .status-badge {
@@ -70,7 +70,13 @@
         .doctor-date-picker label { margin-bottom: 0; color: var(--primary); }
         .doctor-date-picker input { width: auto; margin-bottom: 0; padding: 8px; border: none; }
 
-        /* تصميم نافذة التعديل المنبثقة (Modal) */
+        .ai-box {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 1px solid var(--ai-color); padding: 15px; border-radius: 12px;
+            margin-bottom: 25px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
+        }
+        .ai-box h3 { color: var(--ai-color); border: none; padding: 0; margin-top: 0; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;}
+        
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center; z-index: 1000;
@@ -86,7 +92,7 @@
 
 <div class="container">
     
-    <!-- 1. شاشة تسجيل الدخول -->
+    <!-- شاشة الدخول -->
     <div id="loginScreen" class="card">
         <div class="logo-placeholder">⚕️</div>
         <h2>نظام العيادة الذكي</h2>
@@ -100,10 +106,21 @@
         <button onclick="login()">تسجيل الدخول</button>
     </div>
 
-    <!-- 2. شاشة السكرتير -->
+    <!-- شاشة السكرتير (الرئيسية / الإضافة) -->
     <div id="secretaryScreen" class="card hidden">
+        
+        <!-- زر فتح سجل الحجوزات الجديد -->
+        <button onclick="openReviewScreen()" style="background-color: var(--success);">📅 سجل الحجوزات (مراجعة وتعديل)</button>
+        <hr style="border-color: #334155; margin: 20px 0;">
+
+        <div class="ai-box">
+            <h3>✨ المساعد الذكي (Gemini)</h3>
+            <label style="font-size: 12px; margin-bottom:10px;">اكتب الجملة كما تسمعها، وسيقوم الذكاء بتعبئة الحقول!</label>
+            <textarea id="aiInput" rows="3" placeholder="مثال: احجز لأحمد علي باجر العصر بـ 4، رقمه 07812345678، مراجعة خيط"></textarea>
+            <button id="btnAi" onclick="analyzeWithAI()" style="background-color: var(--ai-color);">تحليل وتعبئة تلقائية</button>
+        </div>
+
         <h2>إضافة حجز جديد</h2>
-        <!-- أضفنا onchange لتحديث القائمة السفلية عند تغيير التاريخ -->
         <label>تاريخ الحجز:</label>
         <input type="date" id="resDate" onchange="loadSecretaryBookings()" required>
         
@@ -116,22 +133,38 @@
         <label>اسم المريض:</label>
         <input type="text" id="resName" placeholder="الاسم الثلاثي" required>
         
-        <label>رقم الهاتف:</label>
-        <input type="tel" id="resPhone" placeholder="077..." required>
+        <label>رقم الهاتف (اختياري):</label>
+        <input type="tel" id="resPhone" placeholder="077... (اختياري)">
         
-        <label>حالة المريض / سبب المراجعة (اختياري):</label>
+        <label>حالة المريض (اختياري):</label>
         <input type="text" id="resStatus" placeholder="مثال: رفع خيط، استشارة...">
         
         <button onclick="saveBooking()" id="btnSave">حفظ الحجز في السحابة</button>
         
-        <!-- قسم عرض حجوزات اليوم للسكرتير -->
-        <h3 style="margin-top: 30px;">📋 حجوزات هذا اليوم</h3>
+        <h3 style="margin-top: 30px;">📋 الحجوزات السريعة (لنفس اليوم)</h3>
         <div id="secBookingsList"></div>
 
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
     </div>
 
-    <!-- 3. شاشة الطبيب -->
+    <!-- 🌟 الشاشة الجديدة: سجل الحجوزات الشامل للسكرتير -->
+    <div id="secretaryReviewScreen" class="card hidden">
+        <h2>سجل الحجوزات الشامل</h2>
+        
+        <div class="doctor-date-picker">
+            <label>اختر تاريخ العرض:</label>
+            <input type="date" id="secReviewDateFilter" onchange="loadReviewBookings()">
+        </div>
+        
+        <div id="reviewBookingsList">
+            <!-- ستظهر الحجوزات هنا -->
+        </div>
+        
+        <button onclick="showScreen('secretaryScreen')" style="background-color: var(--primary); margin-top: 20px;">➕ العودة لإضافة حجز</button>
+        <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+    </div>
+
+    <!-- شاشة الطبيب -->
     <div id="doctorScreen" class="card hidden">
         <h2>جدول المراجعين</h2>
         <div class="doctor-date-picker">
@@ -144,35 +177,28 @@
 
 </div>
 
-<!-- 4. نافذة التعديل المنبثقة (مخفية افتراضياً) -->
+<!-- نافذة التعديل المنبثقة -->
 <div id="editModal" class="modal-overlay hidden">
     <div class="modal-content">
         <h2 style="color: var(--warning);">تعديل الحجز ✏️</h2>
         <input type="hidden" id="editKey">
-        <input type="hidden" id="editDate"> <!-- للاحتفاظ بالتاريخ -->
-        
+        <input type="hidden" id="editDate"> <!-- هذا الحقل سيتغير ديناميكياً حسب التاريخ المراجع -->
         <label>اسم المريض:</label>
         <input type="text" id="editName">
-        
-        <label>رقم الهاتف:</label>
+        <label>رقم الهاتف (اختياري):</label>
         <input type="tel" id="editPhone">
-        
         <label>التسلسل:</label>
         <input type="number" id="editSeq">
-        
         <label>الوقت:</label>
         <input type="time" id="editTime">
-
         <label>الحالة (اختياري):</label>
         <input type="text" id="editStatus">
-        
         <button onclick="saveEdit()" style="background-color: var(--warning); color: #000;">حفظ التعديلات</button>
         <button class="close-btn" onclick="closeEditModal()">إلغاء</button>
     </div>
 </div>
 
 <script type="module">
-    // أضفنا دالة update للتعديل على البيانات
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
     import { getDatabase, ref, push, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
 
@@ -185,28 +211,67 @@
     const db = getDatabase(app);
     const CLINIC_CODE = "MyClinic_1";
 
+    window.analyzeWithAI = async function() {
+        const aiText = document.getElementById('aiInput').value;
+        if (!aiText) { alert("الرجاء كتابة تفاصيل الحجز أولاً!"); return; }
+
+        const btnAi = document.getElementById('btnAi');
+        btnAi.innerText = "جاري التحليل... ⏳"; btnAi.disabled = true;
+
+        // ⚠️ ضع مفتاح جيميناي هنا
+        const GEMINI_API_KEY = "ضع_مفتاح_جيميناي_الخاص_بك_هنا";
+        const todayStr = new Date().toISOString().split('T')[0];
+        
+        const systemPrompt = `أنت مساعد ذكي لسكرتير عيادة في العراق. تاريخ اليوم هو: ${todayStr}.
+        قم باستخراج بيانات الحجز من النص التالي. أرجع النتيجة حصراً بصيغة JSON نظيفة.
+        الحقول المطلوبة: "name", "phone" (إذا لم يذكر اجعله ""), "date" (YYYY-MM-DD), "time" (24h format), "status", "sequence".
+        النص هو: "${aiText}"`;
+
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: systemPrompt }] }] })
+            });
+
+            const data = await response.json();
+            if(data.candidates && data.candidates[0].content.parts[0].text) {
+                let aiResultText = data.candidates[0].content.parts[0].text.trim();
+                aiResultText = aiResultText.replace(/```json/g, "").replace(/```/g, "").trim();
+                const parsed = JSON.parse(aiResultText);
+
+                if(parsed.name) document.getElementById('resName').value = parsed.name;
+                if(parsed.phone !== undefined) document.getElementById('resPhone').value = parsed.phone;
+                if(parsed.date) document.getElementById('resDate').value = parsed.date;
+                if(parsed.time) document.getElementById('resTime').value = parsed.time;
+                if(parsed.status !== undefined) document.getElementById('resStatus').value = parsed.status;
+                if(parsed.sequence) document.getElementById('resSeq').value = parsed.sequence;
+                
+                loadSecretaryBookings();
+                document.getElementById('aiInput').value = ''; 
+                alert("✨ تم تحليل البيانات بنجاح! راجعها ثم اضغط حفظ.");
+            }
+        } catch (error) { alert("حدث خطأ في تحليل البيانات."); }
+        btnAi.innerText = "تحليل وتعبئة تلقائية"; btnAi.disabled = false;
+    }
+
     window.onload = function() {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('resDate').value = today;
         document.getElementById('doctorDateFilter').value = today;
+        document.getElementById('secReviewDateFilter').value = today;
         checkAutoLogin();
     }
 
     window.login = function() {
         const role = document.getElementById('roleSelect').value;
         const pass = document.getElementById('loginPassword').value;
-
         if (role === 'secretary' && pass === '1234') {
             localStorage.setItem('userRole', 'secretary');
-            showScreen('secretaryScreen');
-            loadSecretaryBookings(); // تحميل الأسماء للسكرتير
+            showScreen('secretaryScreen'); loadSecretaryBookings();
         } else if (role === 'doctor' && pass === '5678') {
             localStorage.setItem('userRole', 'doctor');
-            showScreen('doctorScreen');
-            loadDoctorDashboard();
-        } else {
-            alert("كلمة المرور خاطئة!");
-        }
+            showScreen('doctorScreen'); loadDoctorDashboard();
+        } else { alert("كلمة المرور خاطئة!"); }
     }
 
     window.checkAutoLogin = function() {
@@ -224,102 +289,65 @@
     window.showScreen = function(screenId) {
         document.getElementById('loginScreen').classList.add('hidden');
         document.getElementById('secretaryScreen').classList.add('hidden');
+        document.getElementById('secretaryReviewScreen').classList.add('hidden');
         document.getElementById('doctorScreen').classList.add('hidden');
         document.getElementById(screenId).classList.remove('hidden');
     }
 
-    // إضافة حجز
     window.saveBooking = async function() {
         const rDate = document.getElementById('resDate').value;
         const rSeq = document.getElementById('resSeq').value;
         const rTime = document.getElementById('resTime').value;
         const rName = document.getElementById('resName').value;
-        const rPhone = document.getElementById('resPhone').value;
+        const rPhone = document.getElementById('resPhone').value; 
         const rStatus = document.getElementById('resStatus').value;
 
-        if(!rDate || !rSeq || !rTime || !rName || !rPhone) {
-            alert("يرجى تعبئة الحقول الأساسية!"); return;
-        }
+        if(!rDate || !rSeq || !rTime || !rName) { alert("يرجى تعبئة الحقول الأساسية!"); return; }
 
-        const btn = document.getElementById('btnSave');
-        btn.innerText = "جاري التحقق..."; btn.disabled = true;
+        const btn = document.getElementById('btnSave'); btn.innerText = "جاري التحقق..."; btn.disabled = true;
 
         try {
             const bookingsRef = ref(db, `Bookings/${CLINIC_CODE}/${rDate}`);
             const snapshot = await get(bookingsRef);
             let isConflict = false;
-            
             if (snapshot.exists()) {
                 const data = snapshot.val();
                 for (let key in data) {
-                    if (data[key].sequence == rSeq) {
-                        alert(`❌ التسلسل رقم ${rSeq} محجوز مسبقاً.`);
-                        isConflict = true; break;
-                    }
-                    if (data[key].time == rTime) {
-                        alert(`❌ الوقت ${rTime} محجوز مسبقاً.`);
-                        isConflict = true; break;
-                    }
+                    if (data[key].sequence == rSeq) { alert(`❌ التسلسل رقم ${rSeq} محجوز مسبقاً.`); isConflict = true; break; }
+                    if (data[key].time == rTime) { alert(`❌ الوقت ${rTime} محجوز مسبقاً.`); isConflict = true; break; }
                 }
             }
 
             if (!isConflict) {
                 const newBooking = {
-                    sequence: parseInt(rSeq),
-                    time: rTime,
-                    patientName: rName,
-                    phone: rPhone,
-                    patientStatus: rStatus || "",
-                    syncState: "Pending",
-                    timestamp: new Date().getTime()
+                    sequence: parseInt(rSeq), time: rTime, patientName: rName, 
+                    phone: rPhone || "", patientStatus: rStatus || "", syncState: "Pending", timestamp: new Date().getTime()
                 };
-                
                 await push(bookingsRef, newBooking);
                 alert("✅ تم حفظ الحجز بنجاح!");
-                
-                document.getElementById('resName').value = '';
-                document.getElementById('resPhone').value = '';
-                document.getElementById('resStatus').value = '';
-                document.getElementById('resSeq').value = parseInt(rSeq) + 1;
+                document.getElementById('resName').value = ''; document.getElementById('resPhone').value = '';
+                document.getElementById('resStatus').value = ''; document.getElementById('resSeq').value = parseInt(rSeq) + 1;
             }
-        } catch (error) {
-            alert("حدث خطأ في الاتصال: " + error.message);
-        }
+        } catch (error) { alert("حدث خطأ في الاتصال: " + error.message); }
         btn.innerText = "حفظ الحجز في السحابة"; btn.disabled = false;
     }
 
-    // ==============================================================
-    // دوال السكرتير الجديدة (عرض الحجوزات والتعديل)
-    // ==============================================================
-    
-    // جلب حجوزات السكرتير
+    // 1. عرض الحجوزات السريعة (في شاشة الإضافة)
     window.loadSecretaryBookings = function() {
         const selectedDate = document.getElementById('resDate').value;
         if(!selectedDate) return;
-
-        const bookingsRef = ref(db, `Bookings/${CLINIC_CODE}/${selectedDate}`);
         
-        onValue(bookingsRef, (snapshot) => {
-            const listDiv = document.getElementById('secBookingsList');
-            listDiv.innerHTML = ''; 
-            
+        onValue(ref(db, `Bookings/${CLINIC_CODE}/${selectedDate}`), (snapshot) => {
+            const listDiv = document.getElementById('secBookingsList'); listDiv.innerHTML = ''; 
             if (snapshot.exists()) {
                 const data = snapshot.val();
                 const bookingsArray = [];
-                // نحتفظ بمفتاح (Key) الحجز لكي نستطيع تعديله لاحقاً
-                for(let key in data) { 
-                    let b = data[key];
-                    b.firebaseKey = key; 
-                    bookingsArray.push(b); 
-                }
-                
+                for(let key in data) { let b = data[key]; b.firebaseKey = key; bookingsArray.push(b); }
                 bookingsArray.sort((a, b) => a.sequence - b.sequence);
-
                 bookingsArray.forEach(b => {
                     const statusText = b.patientStatus ? ` - ${b.patientStatus}` : '';
-                    // نمرر البيانات إلى دالة الفتح عند الضغط على القلم
-                    const editParams = `'${b.firebaseKey}', '${b.patientName.replace(/'/g,"\\'")}', '${b.phone}', '${b.sequence}', '${b.time}', '${b.patientStatus ? b.patientStatus.replace(/'/g,"\\'") : ""}'`;
-                    
+                    // تمرير selectedDate لمعرفة تاريخ الحجز عند التعديل
+                    const editParams = `'${b.firebaseKey}', '${selectedDate}', '${b.patientName.replace(/'/g,"\\'")}', '${b.phone || ""}', '${b.sequence}', '${b.time}', '${b.patientStatus ? b.patientStatus.replace(/'/g,"\\'") : ""}'`;
                     listDiv.innerHTML += `
                     <div class="booking-card" style="border-right-color: #F59E0B;">
                         <div class="seq">تسلسل: ${b.sequence}</div>
@@ -327,88 +355,105 @@
                         <button class="edit-btn" onclick="openEditModal(${editParams})">✏️ تعديل الحجز</button>
                     </div>`;
                 });
-            } else {
-                listDiv.innerHTML = `<div style="text-align:center; color:#94A3B8;">لا توجد حجوزات في هذا اليوم.</div>`;
-            }
+            } else { listDiv.innerHTML = `<div style="text-align:center; color:#94A3B8;">لا توجد حجوزات في هذا اليوم.</div>`; }
         });
     }
 
-    // فتح نافذة التعديل وملء البيانات القديمة
-    window.openEditModal = function(key, name, phone, seq, time, status) {
-        document.getElementById('editKey').value = key;
-        document.getElementById('editDate').value = document.getElementById('resDate').value;
-        document.getElementById('editName').value = name;
-        document.getElementById('editPhone').value = phone;
-        document.getElementById('editSeq').value = seq;
-        document.getElementById('editTime').value = time;
-        document.getElementById('editStatus').value = status;
-        
-        document.getElementById('editModal').classList.remove('hidden');
-    }
-
-    // إغلاق النافذة
-    window.closeEditModal = function() {
-        document.getElementById('editModal').classList.add('hidden');
-    }
-
-    // حفظ التعديلات في Firebase
-    window.saveEdit = async function() {
-        const key = document.getElementById('editKey').value;
-        const date = document.getElementById('editDate').value;
-        
-        const updatedData = {
-            patientName: document.getElementById('editName').value,
-            phone: document.getElementById('editPhone').value,
-            sequence: parseInt(document.getElementById('editSeq').value),
-            time: document.getElementById('editTime').value,
-            patientStatus: document.getElementById('editStatus').value,
-            syncState: "Pending" // نجعله Pending لكي يعاد سحبه وتحديثه في C#
-        };
-
-        try {
-            const bookingRef = ref(db, `Bookings/${CLINIC_CODE}/${date}/${key}`);
-            await update(bookingRef, updatedData);
-            alert("تم تحديث بيانات الحجز بنجاح!");
-            closeEditModal();
-        } catch (error) {
-            alert("حدث خطأ أثناء التعديل: " + error.message);
+    // 2. فتح شاشة المراجعة الشاملة (للسكرتير)
+    window.openReviewScreen = function() {
+        showScreen('secretaryReviewScreen');
+        if (!document.getElementById('secReviewDateFilter').value) {
+            document.getElementById('secReviewDateFilter').value = new Date().toISOString().split('T')[0];
         }
+        loadReviewBookings();
     }
 
-    // ==============================================================
-    // دوال الطبيب (لم تتغير، فقط للتأكيد أن رقم الهاتف يظهر)
-    // ==============================================================
-    window.loadDoctorDashboard = function() {
-        const selectedDate = document.getElementById('doctorDateFilter').value;
+    // 3. جلب بيانات شاشة المراجعة
+    window.loadReviewBookings = function() {
+        const selectedDate = document.getElementById('secReviewDateFilter').value;
         if(!selectedDate) return;
 
-        const bookingsRef = ref(db, `Bookings/${CLINIC_CODE}/${selectedDate}`);
-        
-        onValue(bookingsRef, (snapshot) => {
-            const listDiv = document.getElementById('bookingsList');
-            listDiv.innerHTML = ''; 
-            
+        onValue(ref(db, `Bookings/${CLINIC_CODE}/${selectedDate}`), (snapshot) => {
+            const listDiv = document.getElementById('reviewBookingsList'); listDiv.innerHTML = ''; 
             if (snapshot.exists()) {
                 const data = snapshot.val();
                 const bookingsArray = [];
+                for(let key in data) { let b = data[key]; b.firebaseKey = key; bookingsArray.push(b); }
+                bookingsArray.sort((a, b) => a.sequence - b.sequence);
+                bookingsArray.forEach(b => {
+                    const statusText = b.patientStatus ? `<div class="status-badge">📌 ${b.patientStatus}</div>` : '';
+                    const phoneText = b.phone ? `<div>📱 الهاتف: ${b.phone}</div>` : '';
+                    
+                    const editParams = `'${b.firebaseKey}', '${selectedDate}', '${b.patientName.replace(/'/g,"\\'")}', '${b.phone || ""}', '${b.sequence}', '${b.time}', '${b.patientStatus ? b.patientStatus.replace(/'/g,"\\'") : ""}'`;
+                    
+                    listDiv.innerHTML += `
+                    <div class="booking-card" style="border-right-color: #10B981;">
+                        <div class="seq">تسلسل: ${b.sequence}</div>
+                        <div>👤 المريض: ${b.patientName}</div>
+                        <div>🕒 الوقت: ${b.time}</div>
+                        ${phoneText}
+                        ${statusText}
+                        <button class="edit-btn" onclick="openEditModal(${editParams})">✏️ تعديل الحجز</button>
+                    </div>`;
+                });
+            } else { listDiv.innerHTML = `<div style="text-align:center; color:#94A3B8; padding:20px;">لا توجد حجوزات في تاريخ ${selectedDate}</div>`; }
+        });
+    }
+
+    // تحديث دالة فتح التعديل لتستقبل التاريخ بشكل ديناميكي
+    window.openEditModal = function(key, date, name, phone, seq, time, status) {
+        document.getElementById('editKey').value = key; 
+        document.getElementById('editDate').value = date; 
+        document.getElementById('editName').value = name; 
+        document.getElementById('editPhone').value = phone;
+        document.getElementById('editSeq').value = seq; 
+        document.getElementById('editTime').value = time;
+        document.getElementById('editStatus').value = status; 
+        document.getElementById('editModal').classList.remove('hidden');
+    }
+
+    window.closeEditModal = function() { document.getElementById('editModal').classList.add('hidden'); }
+
+    window.saveEdit = async function() {
+        const key = document.getElementById('editKey').value; 
+        const date = document.getElementById('editDate').value;
+        const updatedData = {
+            patientName: document.getElementById('editName').value, 
+            phone: document.getElementById('editPhone').value || "", 
+            sequence: parseInt(document.getElementById('editSeq').value), 
+            time: document.getElementById('editTime').value,
+            patientStatus: document.getElementById('editStatus').value, 
+            syncState: "Pending"
+        };
+        try {
+            await update(ref(db, `Bookings/${CLINIC_CODE}/${date}/${key}`), updatedData);
+            alert("تم تحديث بيانات الحجز بنجاح!"); closeEditModal();
+        } catch (error) { alert("حدث خطأ أثناء التعديل: " + error.message); }
+    }
+
+    // دالة الطبيب
+    window.loadDoctorDashboard = function() {
+        const selectedDate = document.getElementById('doctorDateFilter').value;
+        if(!selectedDate) return;
+        onValue(ref(db, `Bookings/${CLINIC_CODE}/${selectedDate}`), (snapshot) => {
+            const listDiv = document.getElementById('bookingsList'); listDiv.innerHTML = ''; 
+            if (snapshot.exists()) {
+                const data = snapshot.val(); const bookingsArray = [];
                 for(let key in data) { bookingsArray.push(data[key]); }
                 bookingsArray.sort((a, b) => a.sequence - b.sequence);
-
                 bookingsArray.forEach(b => {
                     const statusHtml = b.patientStatus ? `<div class="status-badge">📌 ملاحظة: ${b.patientStatus}</div>` : '';
-                    // لاحظ أن رقم الهاتف 📱 موجود ومتاح للطبيب
+                    const phoneHtml = b.phone ? `<div>📱 الهاتف: ${b.phone}</div>` : ''; 
                     listDiv.innerHTML += `
                     <div class="booking-card">
                         <div class="seq">تسلسل: ${b.sequence}</div>
                         <div>👤 المريض: ${b.patientName}</div>
                         <div>🕒 الوقت: ${b.time}</div>
-                        <div>📱 الهاتف: ${b.phone}</div>
+                        ${phoneHtml}
                         ${statusHtml}
                     </div>`;
                 });
-            } else {
-                listDiv.innerHTML = `<div style="text-align:center; color:#94A3B8; padding:20px;">لا توجد حجوزات في تاريخ ${selectedDate}</div>`;
-            }
+            } else { listDiv.innerHTML = `<div style="text-align:center; color:#94A3B8; padding:20px;">لا توجد حجوزات في تاريخ ${selectedDate}</div>`; }
         });
     }
 </script>
