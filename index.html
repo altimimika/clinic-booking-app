@@ -55,16 +55,15 @@
         button.edit-btn { background-color: var(--warning); padding: 8px; font-size: 14px; color: #000; margin: 0; flex: 1; border-radius: 6px; }
         button.delete-btn { background-color: #EF4444; padding: 8px; font-size: 14px; color: #FFF; margin: 0; flex: 1; border-radius: 6px; }
         
-        /* 🩺 شكل بطاقة المراجع (بنلات مدورة الحواف حصرياً كما طلبت) */
+        /* 🩺 شكل بطاقة المراجع الأصلية (بنلات مدورة الحواف تماماً كما طلبت بدون تغيير) */
         .booking-card {
             background: #0F172A; border-right: 4px solid var(--primary);
-            padding: 16px; border-radius: 12px; margin-bottom: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            padding: 15px; border-radius: 8px; margin-bottom: 12px;
         }
-        .booking-card .seq { color: var(--primary); font-size: 18px; font-weight: bold; margin-bottom: 6px;}
+        .booking-card .seq { color: var(--primary); font-size: 18px; font-weight: bold; margin-bottom: 5px;}
         .status-badge {
             display: inline-block; background-color: #334155; color: #F8FAFC;
-            padding: 4px 10px; border-radius: 6px; font-size: 12px; margin-top: 8px;
+            padding: 3px 8px; border-radius: 4px; font-size: 12px; margin-top: 5px;
         }
         
         .records-counter {
@@ -178,6 +177,12 @@
             <label>اختر التاريخ:</label>
             <input type="date" id="secReviewDateFilter" onchange="loadReviewBookings()">
         </div>
+
+        <!-- 🔍 شريط البحث وفلتر الوقت للسكرتير -->
+        <input type="text" id="secSearchInput" placeholder="🔍 ابحث بالاسم، التسلسل، الهاتف، أو الحالة..." oninput="filterSecretaryBookings()">
+        <select id="secTimeFilter" onchange="filterSecretaryBookings()">
+            <option value="">جميع الأوقات</option>
+        </select>
         
         <div id="secretaryCounter" class="records-counter">📊 إجمالي الحجوزات: 0</div>
 
@@ -187,7 +192,7 @@
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
     </div>
 
-    <!-- شاشة الطبيب (بنلات مدورة الحواف تماماً كالطلب) -->
+    <!-- شاشة الطبيب -->
     <div id="doctorScreen" class="card hidden">
         <div id="welcomeDoc" style="color: var(--primary); font-weight: bold; margin-bottom: 15px; text-align: center;"></div>
         <h2>جدول المراجعين</h2>
@@ -196,6 +201,12 @@
             <label>اختر تاريخ العرض:</label>
             <input type="date" id="doctorDateFilter" onchange="loadDoctorDashboard()">
         </div>
+
+        <!-- 🔍 شريط البحث وفلتر الوقت للطبيب -->
+        <input type="text" id="docSearchInput" placeholder="🔍 ابحث بالاسم، التسلسل، الهاتف، أو الحالة..." oninput="filterDoctorBookings()">
+        <select id="docTimeFilter" onchange="filterDoctorBookings()">
+            <option value="">جميع الأوقات</option>
+        </select>
         
         <div id="doctorCounter" class="records-counter">📊 إجمالي المراجعين: 0</div>
 
@@ -240,6 +251,9 @@
     const db = getDatabase(app);
     const CLINIC_CODE = "MyClinic_1";
     let loggedInDoctorId = 0;
+
+    let secretaryAllBookings = [];
+    let doctorAllBookings = [];
 
     async function loadDoctorsDropdowns() {
         try {
@@ -321,7 +335,6 @@
         showScreen('loginScreen');
     }
 
-    // إعدادات التعرف الصوتي والذكاء الاصطناعي
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition;
     if (SpeechRecognition) {
@@ -425,6 +438,7 @@
         const date = document.getElementById('secReviewDateFilter').value;
         const listDiv = document.getElementById('reviewBookingsList');
         const counterDiv = document.getElementById('secretaryCounter');
+        const timeFilter = document.getElementById('secTimeFilter');
         
         if(!docId || !date) {
             listDiv.innerHTML = `<div style="text-align:center; color:#94A3B8; padding:20px;">يرجى اختيار الطبيب والتاريخ.</div>`;
@@ -433,38 +447,73 @@
         }
 
         onValue(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}`), (snapshot) => {
-            listDiv.innerHTML = ''; 
+            secretaryAllBookings = [];
+            timeFilter.innerHTML = '<option value="">جميع الأوقات</option>';
+            const timesSet = new Set();
+
             if (snapshot.exists()) {
                 const data = snapshot.val();
-                const arr = [];
-                for(let k in data) { let b = data[k]; b.key = k; arr.push(b); }
-                arr.sort((a, b) => a.sequence - b.sequence);
+                for(let k in data) { 
+                    let b = data[k]; 
+                    b.key = k; 
+                    secretaryAllBookings.push(b);
+                    if(b.time) timesSet.add(b.time);
+                }
+                secretaryAllBookings.sort((a, b) => a.sequence - b.sequence);
                 
-                counterDiv.innerText = `📊 إجمالي الحجوزات: ${arr.length}`;
-
-                arr.forEach(b => {
-                    const statusText = b.patientStatus ? `<div class="status-badge">📌 ${b.patientStatus}</div>` : '';
-                    const phoneText = b.phone ? `<div>📱 الهاتف: ${b.phone}</div>` : '';
-                    const editParams = `'${b.key}', '${docId}', '${date}', '${b.patientName.replace(/'/g,"\\'")}', '${b.phone || ""}', '${b.sequence}', '${b.time}', '${b.patientStatus ? b.patientStatus.replace(/'/g,"\\'") : ""}'`;
-                    
-                    listDiv.innerHTML += `
-                    <div class="booking-card" style="border-right-color: #10B981;">
-                        <div class="seq">تسلسل: ${b.sequence}</div>
-                        <div>👤 المريض: ${b.patientName}</div>
-                        <div>🕒 الوقت: ${b.time}</div>
-                        ${phoneText}
-                        ${statusText}
-                        <div class="action-buttons">
-                            <button class="edit-btn" onclick="openEditModal(${editParams})">✏️ تعديل</button>
-                            <button class="delete-btn" onclick="deleteBooking('${docId}', '${date}', '${b.key}', '${b.patientName.replace(/'/g,"\\'")}')">🗑️ حذف</button>
-                        </div>
-                    </div>`;
+                timesSet.forEach(t => {
+                    timeFilter.innerHTML += `<option value="${t}">${t}</option>`;
                 });
-            } else { 
-                listDiv.innerHTML = `<div style="text-align:center; color:#94A3B8; padding:20px;">لا توجد حجوزات في هذا التاريخ.</div>`; 
-                counterDiv.innerText = "📊 إجمالي الحجوزات: 0";
             }
+            filterSecretaryBookings();
         });
+    }
+
+    window.filterSecretaryBookings = function() {
+        const query = document.getElementById('secSearchInput').value.toLowerCase().trim();
+        const selectedTime = document.getElementById('secTimeFilter').value;
+        const listDiv = document.getElementById('reviewBookingsList');
+        const counterDiv = document.getElementById('secretaryCounter');
+        const docId = document.getElementById('reviewDoctorSelect').value;
+        const date = document.getElementById('secReviewDateFilter').value;
+
+        let filtered = secretaryAllBookings.filter(b => {
+            const nameMatch = b.patientName && b.patientName.toLowerCase().includes(query);
+            const phoneMatch = b.phone && b.phone.toLowerCase().includes(query);
+            const seqMatch = b.sequence && b.sequence.toString().includes(query);
+            const statusMatch = b.patientStatus && b.patientStatus.toLowerCase().includes(query);
+            const queryMatch = !query || nameMatch || phoneMatch || seqMatch || statusMatch;
+
+            const timeMatch = !selectedTime || b.time === selectedTime;
+
+            return queryMatch && timeMatch;
+        });
+
+        counterDiv.innerText = `📊 إجمالي الحجوزات المعروضة: ${filtered.length}`;
+        listDiv.innerHTML = '';
+
+        if(filtered.length > 0) {
+            filtered.forEach(b => {
+                const statusText = b.patientStatus ? `<div class="status-badge">📌 ${b.patientStatus}</div>` : '';
+                const phoneText = b.phone ? `<div>📱 الهاتف: ${b.phone}</div>` : '';
+                const editParams = `'${b.key}', '${docId}', '${date}', '${b.patientName.replace(/'/g,"\\'")}', '${b.phone || ""}', '${b.sequence}', '${b.time}', '${b.patientStatus ? b.patientStatus.replace(/'/g,"\\'") : ""}'`;
+                
+                listDiv.innerHTML += `
+                <div class="booking-card" style="border-right-color: #10B981;">
+                    <div class="seq">تسلسل: ${b.sequence}</div>
+                    <div>👤 المريض: ${b.patientName}</div>
+                    <div>🕒 الوقت: ${b.time}</div>
+                    ${phoneText}
+                    ${statusText}
+                    <div class="action-buttons">
+                        <button class="edit-btn" onclick="openEditModal(${editParams})">✏️ تعديل</button>
+                        <button class="delete-btn" onclick="deleteBooking('${docId}', '${date}', '${b.key}', '${b.patientName.replace(/'/g,"\\'")}')">🗑️ حذف</button>
+                    </div>
+                </div>`;
+            });
+        } else {
+            listDiv.innerHTML = `<div style="text-align:center; color:#94A3B8; padding:20px;">لا توجد نتائج مطابقة للبحث.</div>`;
+        }
     }
 
     window.deleteBooking = async function(docId, date, key, patientName) {
@@ -512,41 +561,72 @@
         } catch (error) { alert("خطأ: " + error.message); }
     }
 
-    // شاشة الطبيب (بنلات مدورة الحواف حصرياً كما كانت في البداية)
+    // شاشة الطبيب مع البحث والفلتر حسب الوقت
     window.loadDoctorDashboard = function() {
         const selectedDate = document.getElementById('doctorDateFilter').value;
         const docId = localStorage.getItem('doctorId');
-        const listDiv = document.getElementById('bookingsList');
-        const counterDiv = document.getElementById('doctorCounter');
+        const timeFilter = document.getElementById('docTimeFilter');
 
         if(!selectedDate || !docId) return;
 
         onValue(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${selectedDate}`), (snapshot) => {
-            listDiv.innerHTML = ''; 
-            if (snapshot.exists()) {
-                const data = snapshot.val(); const arr = [];
-                for(let k in data) { arr.push(data[k]); }
-                arr.sort((a, b) => a.sequence - b.sequence);
-                
-                counterDiv.innerText = `📊 إجمالي المراجعين: ${arr.length}`;
+            doctorAllBookings = [];
+            timeFilter.innerHTML = '<option value="">جميع الأوقات</option>';
+            const timesSet = new Set();
 
-                arr.forEach(b => {
-                    const statusHtml = b.patientStatus ? `<div class="status-badge">📌 ملاحظة: ${b.patientStatus}</div>` : '';
-                    const phoneHtml = b.phone ? `<div>📱 الهاتف: ${b.phone}</div>` : ''; 
-                    listDiv.innerHTML += `
-                    <div class="booking-card">
-                        <div class="seq">تسلسل: ${b.sequence}</div>
-                        <div>👤 المريض: ${b.patientName}</div>
-                        <div>🕒 الوقت: ${b.time}</div>
-                        ${phoneHtml}
-                        ${statusHtml}
-                    </div>`;
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                for(let k in data) { 
+                    doctorAllBookings.push(data[k]); 
+                    if(data[k].time) timesSet.add(data[k].time);
+                }
+                doctorAllBookings.sort((a, b) => a.sequence - b.sequence);
+
+                timesSet.forEach(t => {
+                    timeFilter.innerHTML += `<option value="${t}">${t}</option>`;
                 });
-            } else { 
-                listDiv.innerHTML = `<div style="text-align:center; color:#94A3B8; padding:20px;">لا توجد حجوزات في تاريخ ${selectedDate}</div>`; 
-                counterDiv.innerText = "📊 إجمالي المراجعين: 0";
             }
+            filterDoctorBookings();
         });
+    }
+
+    window.filterDoctorBookings = function() {
+        const query = document.getElementById('docSearchInput').value.toLowerCase().trim();
+        const selectedTime = document.getElementById('docTimeFilter').value;
+        const listDiv = document.getElementById('bookingsList');
+        const counterDiv = document.getElementById('doctorCounter');
+
+        let filtered = doctorAllBookings.filter(b => {
+            const nameMatch = b.patientName && b.patientName.toLowerCase().includes(query);
+            const phoneMatch = b.phone && b.phone.toLowerCase().includes(query);
+            const seqMatch = b.sequence && b.sequence.toString().includes(query);
+            const statusMatch = b.patientStatus && b.patientStatus.toLowerCase().includes(query);
+            const queryMatch = !query || nameMatch || phoneMatch || seqMatch || statusMatch;
+
+            const timeMatch = !selectedTime || b.time === selectedTime;
+
+            return queryMatch && timeMatch;
+        });
+
+        counterDiv.innerText = `📊 إجمالي المراجعين المعروضين: ${filtered.length}`;
+        listDiv.innerHTML = '';
+
+        if(filtered.length > 0) {
+            filtered.forEach(b => {
+                const statusHtml = b.patientStatus ? `<div class="status-badge">📌 ملاحظة: ${b.patientStatus}</div>` : '';
+                const phoneHtml = b.phone ? `<div>📱 الهاتف: ${b.phone}</div>` : ''; 
+                listDiv.innerHTML += `
+                <div class="booking-card">
+                    <div class="seq">تسلسل: ${b.sequence}</div>
+                    <div>👤 المريض: ${b.patientName}</div>
+                    <div>🕒 الوقت: ${b.time}</div>
+                    ${phoneHtml}
+                    ${statusHtml}
+                </div>`;
+            });
+        } else {
+            listDiv.innerHTML = `<div style="text-align:center; color:#94A3B8; padding:20px;">لا توجد نتائج مطابقة للبحث.</div>`;
+        }
     }
 </script>
 </body>
