@@ -109,6 +109,9 @@
         <div class="logo-placeholder">⚕️</div>
         <h2>نظام العيادة الذكي</h2>
         
+        <label>رمز العيادة (Clinic Code):</label>
+        <input type="text" id="loginClinicCode" placeholder="أدخل رمز العيادة الخاص بك">
+
         <label>اسم المستخدم:</label>
         <input type="text" id="loginUsername" placeholder="أدخل اسم المستخدم">
         
@@ -249,7 +252,9 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const CLINIC_CODE = "MyClinic_1";
+
+    // 💡 جلب كود العيادة الحي من ذاكرة المتصفح أو افتراضي
+    let CLINIC_CODE = localStorage.getItem('clinicCode') || "MyClinic_1";
     let loggedInDoctorId = 0;
 
     let secretaryAllBookings = [];
@@ -278,58 +283,89 @@
     }
 
     window.login = async function() {
+        const clinicCodeInput = document.getElementById('loginClinicCode').value.trim();
         const uInput = document.getElementById('loginUsername').value.trim();
         const pInput = document.getElementById('loginPassword').value.trim();
-        if (!uInput || !pInput) { alert("يرجى إدخال اسم المستخدم وكلمة المرور!"); return; }
+
+        if (!clinicCodeInput || !uInput || !pInput) {
+            alert("يرجى إدخال رمز العيادة، اسم المستخدم وكلمة المرور!");
+            return;
+        }
 
         const btnLogin = document.getElementById('btnLogin');
-        btnLogin.innerText = "جاري التحقق... ⏳"; btnLogin.disabled = true;
+        btnLogin.innerText = "جاري التحقق... ⏳"; 
+        btnLogin.disabled = true;
 
         try {
-            const snapshot = await get(ref(db, `DoctorsConfig/${CLINIC_CODE}`));
+            const snapshot = await get(ref(db, `DoctorsConfig/${clinicCodeInput}`));
             if (snapshot.exists()) {
                 const users = snapshot.val();
                 let foundUser = null;
                 for (let key in users) {
                     if (users[key].Username === uInput && users[key].Password === pInput) {
-                        foundUser = users[key]; break;
+                        foundUser = users[key]; 
+                        break;
                     }
                 }
                 if (foundUser) {
+                    // حفظ كود العيادة وبيانات المستخدم في ذاكرة المتصفح
+                    localStorage.setItem('clinicCode', clinicCodeInput);
+                    CLINIC_CODE = clinicCodeInput;
+
                     localStorage.setItem('userRole', foundUser.Role);
                     localStorage.setItem('userFullName', foundUser.FullName);
                     localStorage.setItem('doctorId', foundUser.DoctorID);
 
                     if (foundUser.Role === "الطبيب") {
                         document.getElementById('welcomeDoc').innerText = `أهلاً بك، د. ${foundUser.FullName} 🩺`;
-                        showScreen('doctorScreen'); loadDoctorDashboard();
+                        showScreen('doctorScreen'); 
+                        loadDoctorDashboard();
                     } else {
                         document.getElementById('welcomeSec').innerText = `أهلاً بك، ${foundUser.FullName} 📋`;
-                        showScreen('secretaryScreen'); await loadDoctorsDropdowns();
+                        showScreen('secretaryScreen'); 
+                        await loadDoctorsDropdowns();
                     }
-                } else { alert("❌ اسم المستخدم أو كلمة المرور غير صحيحة!"); }
-            } else { alert("❌ لا توجد بيانات مستخدمين مسجلة سحابياً."); }
-        } catch (error) { alert("خطأ في الاتصال: " + error.message); }
-        btnLogin.innerText = "تسجيل الدخول"; btnLogin.disabled = false;
+                } else { 
+                    alert("❌ اسم المستخدم أو كلمة المرور غير صحيحة!"); 
+                }
+            } else { 
+                alert("❌ رمز العيادة (Clinic Code) غير صحيح أو غير موجود!"); 
+            }
+        } catch (error) { 
+            alert("خطأ في الاتصال: " + error.message); 
+        }
+        
+        btnLogin.innerText = "تسجيل الدخول"; 
+        btnLogin.disabled = false;
     }
 
     window.checkAutoLogin = async function() {
         const role = localStorage.getItem('userRole');
         const fullName = localStorage.getItem('userFullName');
         loggedInDoctorId = localStorage.getItem('doctorId');
+        CLINIC_CODE = localStorage.getItem('clinicCode') || "MyClinic_1";
+
+        // ملء خانة رمز العيادة تلقائياً إذا كان محفوظاً
+        if (localStorage.getItem('clinicCode')) {
+            const codeField = document.getElementById('loginClinicCode');
+            if (codeField) codeField.value = localStorage.getItem('clinicCode');
+        }
 
         if(role === 'الطبيب') { 
             document.getElementById('welcomeDoc').innerText = `أهلاً بك، د. ${fullName} 🩺`;
-            showScreen('doctorScreen'); loadDoctorDashboard(); 
+            showScreen('doctorScreen'); 
+            loadDoctorDashboard(); 
         }
         else if (role) { 
             document.getElementById('welcomeSec').innerText = `أهلاً بك، ${fullName} 📋`;
-            showScreen('secretaryScreen'); await loadDoctorsDropdowns();
+            showScreen('secretaryScreen'); 
+            await loadDoctorsDropdowns();
         }
     }
 
     window.logout = function() {
         localStorage.clear();
+        document.getElementById('loginClinicCode').value = '';
         document.getElementById('loginUsername').value = '';
         document.getElementById('loginPassword').value = '';
         showScreen('loginScreen');
@@ -561,7 +597,6 @@
         } catch (error) { alert("خطأ: " + error.message); }
     }
 
-    // شاشة الطبيب مع البحث والفلتر حسب الوقت
     window.loadDoctorDashboard = function() {
         const selectedDate = document.getElementById('doctorDateFilter').value;
         const docId = localStorage.getItem('doctorId');
