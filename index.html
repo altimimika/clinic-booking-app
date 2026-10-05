@@ -7,16 +7,12 @@
     <link rel="manifest" href="manifest.json">
     <style>
         :root {
-            --primary: #2196F3;
-            --bg-color: #0F172A;
-            --card-bg: #1E293B;
-            --text-main: #F8FAFC;
-            --text-muted: #94A3B8;
+            --primary: #2196F3; --bg-color: #0F172A; --card-bg: #1E293B;
+            --text-main: #F8FAFC; --text-muted: #94A3B8; --warning: #F59E0B;
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            background-color: var(--bg-color); color: var(--text-main);
             margin: 0; padding: 20px; box-sizing: border-box;
         }
         .container { max-width: 500px; margin: 0 auto; }
@@ -28,6 +24,8 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         h2 { text-align: center; color: var(--primary); margin-top: 0; }
+        h3 { color: var(--primary); border-bottom: 1px solid #334155; padding-bottom: 10px; }
+        
         .logo-placeholder {
             width: 80px; height: 80px; background: var(--primary); 
             border-radius: 50%; margin: 0 auto 20px; 
@@ -51,10 +49,11 @@
         }
         button:active { transform: scale(0.98); }
         button.logout-btn { background-color: #334155; margin-top: 15px; }
+        button.edit-btn { background-color: var(--warning); padding: 8px; width: auto; font-size: 14px; margin-top: 10px; }
         
         .booking-card {
             background: #0F172A; border-right: 4px solid var(--primary);
-            padding: 15px; border-radius: 8px; margin-bottom: 12px;
+            padding: 15px; border-radius: 8px; margin-bottom: 12px; position: relative;
         }
         .booking-card .seq { color: var(--primary); font-size: 18px; font-weight: bold; margin-bottom: 5px;}
         .status-badge {
@@ -64,13 +63,23 @@
         
         .hidden { display: none !important; }
         
-        /* تصميم خاص لتقويم الطبيب */
         .doctor-date-picker {
             display: flex; align-items: center; justify-content: space-between;
             background: #0F172A; padding: 10px; border-radius: 8px; margin-bottom: 20px;
         }
         .doctor-date-picker label { margin-bottom: 0; color: var(--primary); }
         .doctor-date-picker input { width: auto; margin-bottom: 0; padding: 8px; border: none; }
+
+        /* تصميم نافذة التعديل المنبثقة (Modal) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-content {
+            background: var(--card-bg); padding: 20px; border-radius: 15px;
+            width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto;
+        }
+        .close-btn { background-color: #EF4444; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -81,25 +90,22 @@
     <div id="loginScreen" class="card">
         <div class="logo-placeholder">⚕️</div>
         <h2>نظام العيادة الذكي</h2>
-        
         <label>الدخول بصلاحية:</label>
         <select id="roleSelect">
             <option value="secretary">سكرتير العيادة</option>
             <option value="doctor">الطبيب</option>
         </select>
-        
         <label>كلمة المرور:</label>
         <input type="password" id="loginPassword" placeholder="أدخل كلمة المرور">
-        
         <button onclick="login()">تسجيل الدخول</button>
     </div>
 
     <!-- 2. شاشة السكرتير -->
     <div id="secretaryScreen" class="card hidden">
         <h2>إضافة حجز جديد</h2>
-        
+        <!-- أضفنا onchange لتحديث القائمة السفلية عند تغيير التاريخ -->
         <label>تاريخ الحجز:</label>
-        <input type="date" id="resDate" required>
+        <input type="date" id="resDate" onchange="loadSecretaryBookings()" required>
         
         <label>تسلسل الحجز:</label>
         <input type="number" id="resSeq" placeholder="مثال: 1" required>
@@ -113,38 +119,63 @@
         <label>رقم الهاتف:</label>
         <input type="tel" id="resPhone" placeholder="077..." required>
         
-        <!-- الحقل الجديد الاختياري -->
         <label>حالة المريض / سبب المراجعة (اختياري):</label>
-        <input type="text" id="resStatus" placeholder="مثال: رفع خيط، جلب أشعة، استشارة...">
+        <input type="text" id="resStatus" placeholder="مثال: رفع خيط، استشارة...">
         
         <button onclick="saveBooking()" id="btnSave">حفظ الحجز في السحابة</button>
+        
+        <!-- قسم عرض حجوزات اليوم للسكرتير -->
+        <h3 style="margin-top: 30px;">📋 حجوزات هذا اليوم</h3>
+        <div id="secBookingsList"></div>
+
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
     </div>
 
     <!-- 3. شاشة الطبيب -->
     <div id="doctorScreen" class="card hidden">
         <h2>جدول المراجعين</h2>
-        
-        <!-- التقويم الخاص بالطبيب -->
         <div class="doctor-date-picker">
             <label>اختر تاريخ العرض:</label>
             <input type="date" id="doctorDateFilter" onchange="loadDoctorDashboard()">
         </div>
-        
-        <div id="bookingsList">
-            <!-- ستظهر الحجوزات هنا -->
-        </div>
-        
+        <div id="bookingsList"></div>
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
     </div>
 
 </div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-    import { getDatabase, ref, push, get, onValue } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
+<!-- 4. نافذة التعديل المنبثقة (مخفية افتراضياً) -->
+<div id="editModal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <h2 style="color: var(--warning);">تعديل الحجز ✏️</h2>
+        <input type="hidden" id="editKey">
+        <input type="hidden" id="editDate"> <!-- للاحتفاظ بالتاريخ -->
+        
+        <label>اسم المريض:</label>
+        <input type="text" id="editName">
+        
+        <label>رقم الهاتف:</label>
+        <input type="tel" id="editPhone">
+        
+        <label>التسلسل:</label>
+        <input type="number" id="editSeq">
+        
+        <label>الوقت:</label>
+        <input type="time" id="editTime">
 
-    // ضع الرابط الخاص بك هنا
+        <label>الحالة (اختياري):</label>
+        <input type="text" id="editStatus">
+        
+        <button onclick="saveEdit()" style="background-color: var(--warning); color: #000;">حفظ التعديلات</button>
+        <button class="close-btn" onclick="closeEditModal()">إلغاء</button>
+    </div>
+</div>
+
+<script type="module">
+    // أضفنا دالة update للتعديل على البيانات
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+    import { getDatabase, ref, push, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
+
     const firebaseConfig = {
       databaseURL: "https://myclinicsystem-f978f-default-rtdb.firebaseio.com/", 
       projectId: "myclinicsystem-f978f",
@@ -157,7 +188,7 @@
     window.onload = function() {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('resDate').value = today;
-        document.getElementById('doctorDateFilter').value = today; // تعيين تاريخ اليوم كافتراضي للطبيب
+        document.getElementById('doctorDateFilter').value = today;
         checkAutoLogin();
     }
 
@@ -168,6 +199,7 @@
         if (role === 'secretary' && pass === '1234') {
             localStorage.setItem('userRole', 'secretary');
             showScreen('secretaryScreen');
+            loadSecretaryBookings(); // تحميل الأسماء للسكرتير
         } else if (role === 'doctor' && pass === '5678') {
             localStorage.setItem('userRole', 'doctor');
             showScreen('doctorScreen');
@@ -179,7 +211,7 @@
 
     window.checkAutoLogin = function() {
         const role = localStorage.getItem('userRole');
-        if(role === 'secretary') showScreen('secretaryScreen');
+        if(role === 'secretary') { showScreen('secretaryScreen'); loadSecretaryBookings(); }
         else if (role === 'doctor') { showScreen('doctorScreen'); loadDoctorDashboard(); }
     }
 
@@ -196,13 +228,14 @@
         document.getElementById(screenId).classList.remove('hidden');
     }
 
+    // إضافة حجز
     window.saveBooking = async function() {
         const rDate = document.getElementById('resDate').value;
         const rSeq = document.getElementById('resSeq').value;
         const rTime = document.getElementById('resTime').value;
         const rName = document.getElementById('resName').value;
         const rPhone = document.getElementById('resPhone').value;
-        const rStatus = document.getElementById('resStatus').value; // جلب قيمة الحالة
+        const rStatus = document.getElementById('resStatus').value;
 
         if(!rDate || !rSeq || !rTime || !rName || !rPhone) {
             alert("يرجى تعبئة الحقول الأساسية!"); return;
@@ -220,11 +253,11 @@
                 const data = snapshot.val();
                 for (let key in data) {
                     if (data[key].sequence == rSeq) {
-                        alert(`❌ عذراً! التسلسل رقم ${rSeq} محجوز مسبقاً.`);
+                        alert(`❌ التسلسل رقم ${rSeq} محجوز مسبقاً.`);
                         isConflict = true; break;
                     }
                     if (data[key].time == rTime) {
-                        alert(`❌ عذراً! الوقت ${rTime} محجوز مسبقاً.`);
+                        alert(`❌ الوقت ${rTime} محجوز مسبقاً.`);
                         isConflict = true; break;
                     }
                 }
@@ -236,8 +269,8 @@
                     time: rTime,
                     patientName: rName,
                     phone: rPhone,
-                    patientStatus: rStatus || "", // حفظ الحالة (أو تركها فارغة إذا لم يكتب شيئاً)
-                    syncState: "Pending", // لنعرف في السي شارب أنه جديد
+                    patientStatus: rStatus || "",
+                    syncState: "Pending",
                     timestamp: new Date().getTime()
                 };
                 
@@ -246,25 +279,109 @@
                 
                 document.getElementById('resName').value = '';
                 document.getElementById('resPhone').value = '';
-                document.getElementById('resStatus').value = ''; // تفريغ حقل الحالة
+                document.getElementById('resStatus').value = '';
                 document.getElementById('resSeq').value = parseInt(rSeq) + 1;
             }
-
         } catch (error) {
             alert("حدث خطأ في الاتصال: " + error.message);
         }
-
         btn.innerText = "حفظ الحجز في السحابة"; btn.disabled = false;
     }
 
-    // دالة الطبيب المحدثة للعمل مع التقويم
-    window.loadDoctorDashboard = function() {
-        // قراءة التاريخ الذي اختاره الطبيب من التقويم
-        const selectedDate = document.getElementById('doctorDateFilter').value;
-        
+    // ==============================================================
+    // دوال السكرتير الجديدة (عرض الحجوزات والتعديل)
+    // ==============================================================
+    
+    // جلب حجوزات السكرتير
+    window.loadSecretaryBookings = function() {
+        const selectedDate = document.getElementById('resDate').value;
         if(!selectedDate) return;
 
-        // جلب حجوزات اليوم المختار فقط
+        const bookingsRef = ref(db, `Bookings/${CLINIC_CODE}/${selectedDate}`);
+        
+        onValue(bookingsRef, (snapshot) => {
+            const listDiv = document.getElementById('secBookingsList');
+            listDiv.innerHTML = ''; 
+            
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                const bookingsArray = [];
+                // نحتفظ بمفتاح (Key) الحجز لكي نستطيع تعديله لاحقاً
+                for(let key in data) { 
+                    let b = data[key];
+                    b.firebaseKey = key; 
+                    bookingsArray.push(b); 
+                }
+                
+                bookingsArray.sort((a, b) => a.sequence - b.sequence);
+
+                bookingsArray.forEach(b => {
+                    const statusText = b.patientStatus ? ` - ${b.patientStatus}` : '';
+                    // نمرر البيانات إلى دالة الفتح عند الضغط على القلم
+                    const editParams = `'${b.firebaseKey}', '${b.patientName.replace(/'/g,"\\'")}', '${b.phone}', '${b.sequence}', '${b.time}', '${b.patientStatus ? b.patientStatus.replace(/'/g,"\\'") : ""}'`;
+                    
+                    listDiv.innerHTML += `
+                    <div class="booking-card" style="border-right-color: #F59E0B;">
+                        <div class="seq">تسلسل: ${b.sequence}</div>
+                        <div>👤 ${b.patientName} ${statusText}</div>
+                        <button class="edit-btn" onclick="openEditModal(${editParams})">✏️ تعديل الحجز</button>
+                    </div>`;
+                });
+            } else {
+                listDiv.innerHTML = `<div style="text-align:center; color:#94A3B8;">لا توجد حجوزات في هذا اليوم.</div>`;
+            }
+        });
+    }
+
+    // فتح نافذة التعديل وملء البيانات القديمة
+    window.openEditModal = function(key, name, phone, seq, time, status) {
+        document.getElementById('editKey').value = key;
+        document.getElementById('editDate').value = document.getElementById('resDate').value;
+        document.getElementById('editName').value = name;
+        document.getElementById('editPhone').value = phone;
+        document.getElementById('editSeq').value = seq;
+        document.getElementById('editTime').value = time;
+        document.getElementById('editStatus').value = status;
+        
+        document.getElementById('editModal').classList.remove('hidden');
+    }
+
+    // إغلاق النافذة
+    window.closeEditModal = function() {
+        document.getElementById('editModal').classList.add('hidden');
+    }
+
+    // حفظ التعديلات في Firebase
+    window.saveEdit = async function() {
+        const key = document.getElementById('editKey').value;
+        const date = document.getElementById('editDate').value;
+        
+        const updatedData = {
+            patientName: document.getElementById('editName').value,
+            phone: document.getElementById('editPhone').value,
+            sequence: parseInt(document.getElementById('editSeq').value),
+            time: document.getElementById('editTime').value,
+            patientStatus: document.getElementById('editStatus').value,
+            syncState: "Pending" // نجعله Pending لكي يعاد سحبه وتحديثه في C#
+        };
+
+        try {
+            const bookingRef = ref(db, `Bookings/${CLINIC_CODE}/${date}/${key}`);
+            await update(bookingRef, updatedData);
+            alert("تم تحديث بيانات الحجز بنجاح!");
+            closeEditModal();
+        } catch (error) {
+            alert("حدث خطأ أثناء التعديل: " + error.message);
+        }
+    }
+
+    // ==============================================================
+    // دوال الطبيب (لم تتغير، فقط للتأكيد أن رقم الهاتف يظهر)
+    // ==============================================================
+    window.loadDoctorDashboard = function() {
+        const selectedDate = document.getElementById('doctorDateFilter').value;
+        if(!selectedDate) return;
+
         const bookingsRef = ref(db, `Bookings/${CLINIC_CODE}/${selectedDate}`);
         
         onValue(bookingsRef, (snapshot) => {
@@ -275,20 +392,17 @@
                 const data = snapshot.val();
                 const bookingsArray = [];
                 for(let key in data) { bookingsArray.push(data[key]); }
-                
                 bookingsArray.sort((a, b) => a.sequence - b.sequence);
 
                 bookingsArray.forEach(b => {
-                    // إذا كان هناك حالة للمريض، نظهرها كلون مميز، وإلا نخفيها
-                    const statusHtml = b.patientStatus 
-                        ? `<div class="status-badge">📌 ملاحظة: ${b.patientStatus}</div>` 
-                        : '';
-
+                    const statusHtml = b.patientStatus ? `<div class="status-badge">📌 ملاحظة: ${b.patientStatus}</div>` : '';
+                    // لاحظ أن رقم الهاتف 📱 موجود ومتاح للطبيب
                     listDiv.innerHTML += `
                     <div class="booking-card">
                         <div class="seq">تسلسل: ${b.sequence}</div>
                         <div>👤 المريض: ${b.patientName}</div>
                         <div>🕒 الوقت: ${b.time}</div>
+                        <div>📱 الهاتف: ${b.phone}</div>
                         ${statusHtml}
                     </div>`;
                 });
