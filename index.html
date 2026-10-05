@@ -14,7 +14,6 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color); color: var(--text-main);
             margin: 0; padding: 20px; box-sizing: border-box;
-            user-select: none; -webkit-user-select: none;
         }
         .container { max-width: 500px; margin: 0 auto; }
         .card {
@@ -50,31 +49,24 @@
         }
         button:active { transform: scale(0.98); }
         button.logout-btn { background-color: #334155; margin-top: 15px; }
-        button.edit-btn { background-color: var(--warning); padding: 8px; width: auto; font-size: 14px; margin-top: 10px; color: #000; }
         
-        /* تصميم بطاقة الحجز مع دعم السحب */
-        .swipe-container {
-            position: relative; overflow: hidden; margin-bottom: 12px; border-radius: 8px;
-        }
+        /* أزرار الإجراءات داخل الكارد الخاص بالسكرتير */
+        .action-buttons { display: flex; gap: 8px; margin-top: 10px; }
+        button.edit-btn { background-color: var(--warning); padding: 8px; font-size: 14px; color: #000; margin: 0; flex: 1; border-radius: 6px; }
+        button.delete-btn { background-color: #EF4444; padding: 8px; font-size: 14px; color: #FFF; margin: 0; flex: 1; border-radius: 6px; }
+        
+        /* 🩺 شكل بطاقة المراجع (بنلات مدورة الحواف حصرياً كما طلبت) */
         .booking-card {
             background: #0F172A; border-right: 4px solid var(--primary);
-            padding: 15px; border-radius: 8px; position: relative; z-index: 2;
-            transition: transform 0.2s ease, background-color 0.3s ease;
-            touch-action: pan-y;
+            padding: 16px; border-radius: 12px; margin-bottom: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
-        .booking-card.deleting {
-            background-color: #EF4444 !important; color: white;
-            border-right-color: #B91C1C !important;
-        }
-        .booking-card .seq { color: var(--primary); font-size: 18px; font-weight: bold; margin-bottom: 5px;}
-        .booking-card.deleting .seq { color: #FFE4E6; }
-
+        .booking-card .seq { color: var(--primary); font-size: 18px; font-weight: bold; margin-bottom: 6px;}
         .status-badge {
             display: inline-block; background-color: #334155; color: #F8FAFC;
-            padding: 3px 8px; border-radius: 4px; font-size: 12px; margin-top: 5px;
+            padding: 4px 10px; border-radius: 6px; font-size: 12px; margin-top: 8px;
         }
         
-        /* عداد السجلات */
         .records-counter {
             background: #1e293b; border: 1px solid #334155; padding: 10px 15px;
             border-radius: 8px; margin-bottom: 15px; font-weight: bold; text-align: center;
@@ -187,7 +179,6 @@
             <input type="date" id="secReviewDateFilter" onchange="loadReviewBookings()">
         </div>
         
-        <!-- عداد السجلات -->
         <div id="secretaryCounter" class="records-counter">📊 إجمالي الحجوزات: 0</div>
 
         <div id="reviewBookingsList"></div>
@@ -196,7 +187,7 @@
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
     </div>
 
-    <!-- شاشة الطبيب -->
+    <!-- شاشة الطبيب (بنلات مدورة الحواف تماماً كالطلب) -->
     <div id="doctorScreen" class="card hidden">
         <div id="welcomeDoc" style="color: var(--primary); font-weight: bold; margin-bottom: 15px; text-align: center;"></div>
         <h2>جدول المراجعين</h2>
@@ -206,7 +197,6 @@
             <input type="date" id="doctorDateFilter" onchange="loadDoctorDashboard()">
         </div>
         
-        <!-- عداد السجلات للطبيب -->
         <div id="doctorCounter" class="records-counter">📊 إجمالي المراجعين: 0</div>
 
         <div id="bookingsList"></div>
@@ -430,7 +420,6 @@
         }
     }
 
-    // 💡 جلب حجوزات السكرتير مع تفعيل ميزة السحب للحذف
     window.loadReviewBookings = function() {
         const docId = document.getElementById('reviewDoctorSelect').value;
         const date = document.getElementById('secReviewDateFilter').value;
@@ -459,21 +448,18 @@
                     const editParams = `'${b.key}', '${docId}', '${date}', '${b.patientName.replace(/'/g,"\\'")}', '${b.phone || ""}', '${b.sequence}', '${b.time}', '${b.patientStatus ? b.patientStatus.replace(/'/g,"\\'") : ""}'`;
                     
                     listDiv.innerHTML += `
-                    <div class="swipe-container">
-                        <div class="booking-card" id="card_${b.key}" 
-                             data-key="${b.key}" data-doc="${docId}" data-date="${date}"
-                             style="border-right-color: #10B981;">
-                            <div class="seq">تسلسل: ${b.sequence}</div>
-                            <div>👤 المريض: ${b.patientName}</div>
-                            <div>🕒 الوقت: ${b.time}</div>
-                            ${phoneText}
-                            ${statusText}
-                            <button class="edit-btn" onclick="openEditModal(${editParams})">✏️ تعديل الحجز</button>
+                    <div class="booking-card" style="border-right-color: #10B981;">
+                        <div class="seq">تسلسل: ${b.sequence}</div>
+                        <div>👤 المريض: ${b.patientName}</div>
+                        <div>🕒 الوقت: ${b.time}</div>
+                        ${phoneText}
+                        ${statusText}
+                        <div class="action-buttons">
+                            <button class="edit-btn" onclick="openEditModal(${editParams})">✏️ تعديل</button>
+                            <button class="delete-btn" onclick="deleteBooking('${docId}', '${date}', '${b.key}', '${b.patientName.replace(/'/g,"\\'")}')">🗑️ حذف</button>
                         </div>
                     </div>`;
                 });
-
-                initSwipeToDelete(docId, date);
             } else { 
                 listDiv.innerHTML = `<div style="text-align:center; color:#94A3B8; padding:20px;">لا توجد حجوزات في هذا التاريخ.</div>`; 
                 counterDiv.innerText = "📊 إجمالي الحجوزات: 0";
@@ -481,63 +467,15 @@
         });
     }
 
-    // 🗑️ تفعيل تقنية السحب يمين أو يسار للحذف (مخصص للسكرتير)
-    function initSwipeToDelete(docId, date) {
-        document.querySelectorAll('.booking-card').forEach(card => {
-            let startX = 0;
-            let currentX = 0;
-            let isSwiping = false;
-
-            card.addEventListener('touchstart', (e) => {
-                startX = e.touches[0].clientX;
-                isSwiping = true;
-            });
-
-            card.addEventListener('touchmove', (e) => {
-                if (!isSwiping) return;
-                currentX = e.touches[0].clientX;
-                let diff = currentX - startX;
-                
-                // تحريك البطاقة أفقياً وإعطاء مؤشر أحمر عند تجاوز 70 بيكسل
-                if (Math.abs(diff) < 200) {
-                    card.style.transform = `translateX(${diff}px)`;
-                    if (Math.abs(diff) > 70) {
-                        card.classList.add('deleting');
-                    } else {
-                        card.classList.remove('deleting');
-                    }
-                }
-            });
-
-            card.addEventListener('touchend', async (e) => {
-                if (!isSwiping) return;
-                isSwiping = false;
-                let diff = currentX - startX;
-
-                if (Math.abs(diff) > 100) {
-                    // سحب كامل -> طلب تأكيد الحذف
-                    const confirmDelete = confirm("🗑️ هل تريد حذف هذا السجل نهائياً؟");
-                    if (confirmDelete) {
-                        const key = card.getAttribute('data-key');
-                        try {
-                            await remove(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}/${key}`));
-                            // سيتم تحديث القائمة تلقائياً عبر onValue
-                        } catch(err) {
-                            alert("حدث خطأ أثناء الحذف.");
-                        }
-                    } else {
-                        resetCardPosition(card);
-                    }
-                } else {
-                    resetCardPosition(card);
-                }
-            });
-        });
-    }
-
-    function resetCardPosition(card) {
-        card.style.transform = 'translateX(0px)';
-        card.classList.remove('deleting');
+    window.deleteBooking = async function(docId, date, key, patientName) {
+        if (confirm(`🗑️ هل أنت متأكد من حذف حجز المريض (${patientName}) نهائياً؟`)) {
+            try {
+                await remove(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}/${key}`));
+                alert("✅ تم حذف الحجز بنجاح.");
+            } catch (error) {
+                alert("❌ حدث خطأ أثناء الحذف: " + error.message);
+            }
+        }
     }
 
     window.openEditModal = function(key, docId, date, name, phone, seq, time, status) {
@@ -574,7 +512,7 @@
         } catch (error) { alert("خطأ: " + error.message); }
     }
 
-    // شاشة الطبيب مع عداد السجلات (بدون ميزة الحذف بالسحب)
+    // شاشة الطبيب (بنلات مدورة الحواف حصرياً كما كانت في البداية)
     window.loadDoctorDashboard = function() {
         const selectedDate = document.getElementById('doctorDateFilter').value;
         const docId = localStorage.getItem('doctorId');
