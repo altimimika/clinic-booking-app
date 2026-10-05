@@ -86,6 +86,8 @@
             width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto;
         }
         .close-btn { background-color: #EF4444; margin-top: 10px; }
+        
+        .flex-row { display: flex; gap: 10px; }
     </style>
 </head>
 <body>
@@ -109,20 +111,24 @@
     <!-- شاشة السكرتير (الرئيسية / الإضافة) -->
     <div id="secretaryScreen" class="card hidden">
         
-        <!-- زر فتح سجل الحجوزات الجديد -->
         <button onclick="openReviewScreen()" style="background-color: var(--success);">📅 سجل الحجوزات (مراجعة وتعديل)</button>
         <hr style="border-color: #334155; margin: 20px 0;">
 
+        <!-- 🎙️ صندوق الذكاء الاصطناعي الصوتي -->
         <div class="ai-box">
-            <h3>✨ المساعد الذكي (Gemini)</h3>
-            <label style="font-size: 12px; margin-bottom:10px;">اكتب الجملة كما تسمعها، وسيقوم الذكاء بتعبئة الحقول!</label>
+            <h3>✨ المساعد الصوتي الذكي</h3>
+            <label style="font-size: 12px; margin-bottom:10px;">اضغط على المايكروفون وتحدث، أو اكتب التفاصيل يدوياً.</label>
             <textarea id="aiInput" rows="3" placeholder="مثال: احجز لأحمد علي باجر العصر بـ 4، رقمه 07812345678، مراجعة خيط"></textarea>
-            <button id="btnAi" onclick="analyzeWithAI()" style="background-color: var(--ai-color);">تحليل وتعبئة تلقائية</button>
+            
+            <div class="flex-row">
+                <button id="btnMic" onclick="startVoiceRecognition()" style="background-color: #EF4444; flex: 1;">🎙️ تحدث الآن</button>
+                <button id="btnAi" onclick="analyzeWithAI()" style="background-color: var(--ai-color); flex: 2;">تحليل وتعبئة</button>
+            </div>
         </div>
 
-        <h2>إضافة حجز جديد</h2>
+        <h2>الإدخال اليدوي / المراجعة</h2>
         <label>تاريخ الحجز:</label>
-        <input type="date" id="resDate" onchange="loadSecretaryBookings()" required>
+        <input type="date" id="resDate" required>
         
         <label>تسلسل الحجز:</label>
         <input type="number" id="resSeq" placeholder="مثال: 1" required>
@@ -140,14 +146,10 @@
         <input type="text" id="resStatus" placeholder="مثال: رفع خيط، استشارة...">
         
         <button onclick="saveBooking()" id="btnSave">حفظ الحجز في السحابة</button>
-        
-        <h3 style="margin-top: 30px;">📋 الحجوزات السريعة (لنفس اليوم)</h3>
-        <div id="secBookingsList"></div>
-
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
     </div>
 
-    <!-- 🌟 الشاشة الجديدة: سجل الحجوزات الشامل للسكرتير -->
+    <!-- الشاشة الجديدة: سجل الحجوزات الشامل للسكرتير -->
     <div id="secretaryReviewScreen" class="card hidden">
         <h2>سجل الحجوزات الشامل</h2>
         
@@ -156,9 +158,7 @@
             <input type="date" id="secReviewDateFilter" onchange="loadReviewBookings()">
         </div>
         
-        <div id="reviewBookingsList">
-            <!-- ستظهر الحجوزات هنا -->
-        </div>
+        <div id="reviewBookingsList"></div>
         
         <button onclick="showScreen('secretaryScreen')" style="background-color: var(--primary); margin-top: 20px;">➕ العودة لإضافة حجز</button>
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
@@ -182,7 +182,7 @@
     <div class="modal-content">
         <h2 style="color: var(--warning);">تعديل الحجز ✏️</h2>
         <input type="hidden" id="editKey">
-        <input type="hidden" id="editDate"> <!-- هذا الحقل سيتغير ديناميكياً حسب التاريخ المراجع -->
+        <input type="hidden" id="editDate">
         <label>اسم المريض:</label>
         <input type="text" id="editName">
         <label>رقم الهاتف (اختياري):</label>
@@ -202,6 +202,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
     import { getDatabase, ref, push, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
 
+    // 💡 ضع رابط الفايربيس الخاص بك هنا
     const firebaseConfig = {
       databaseURL: "https://myclinicsystem-f978f-default-rtdb.firebaseio.com/", 
       projectId: "myclinicsystem-f978f",
@@ -211,9 +212,58 @@
     const db = getDatabase(app);
     const CLINIC_CODE = "MyClinic_1";
 
+    // ==========================================
+    // 🎙️ تقنية التعرف على الصوت (Web Speech API)
+    // ==========================================
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition;
+
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.lang = 'ar-IQ'; 
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = function() {
+            const btnMic = document.getElementById('btnMic');
+            btnMic.innerText = "🔴 جاري الاستماع...";
+            btnMic.style.backgroundColor = "#B91C1C";
+        };
+
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('aiInput').value = transcript;
+            analyzeWithAI(); 
+        };
+
+        recognition.onerror = function(event) {
+            alert("حدث خطأ في المايكروفون أو لم يتم إعطاء الصلاحية.");
+            resetMicButton();
+        };
+
+        recognition.onend = function() { resetMicButton(); };
+    }
+
+    function resetMicButton() {
+        const btnMic = document.getElementById('btnMic');
+        btnMic.innerText = "🎙️ تحدث الآن";
+        btnMic.style.backgroundColor = "#EF4444";
+    }
+
+    window.startVoiceRecognition = function() {
+        if (!recognition) {
+            alert("عذراً، متصفح هاتفك لا يدعم ميزة الإدخال الصوتي. يرجى استخدام متصفح جوجل كروم الحديث.");
+            return;
+        }
+        recognition.start();
+    }
+
+    // ==========================================
+    // 🤖 دالة تحليل البيانات (Google Gemini)
+    // ==========================================
     window.analyzeWithAI = async function() {
         const aiText = document.getElementById('aiInput').value;
-        if (!aiText) { alert("الرجاء كتابة تفاصيل الحجز أولاً!"); return; }
+        if (!aiText) { alert("الرجاء كتابة أو نطق تفاصيل الحجز أولاً!"); return; }
 
         const btnAi = document.getElementById('btnAi');
         btnAi.innerText = "جاري التحليل... ⏳"; btnAi.disabled = true;
@@ -246,14 +296,16 @@
                 if(parsed.status !== undefined) document.getElementById('resStatus').value = parsed.status;
                 if(parsed.sequence) document.getElementById('resSeq').value = parsed.sequence;
                 
-                loadSecretaryBookings();
                 document.getElementById('aiInput').value = ''; 
-                alert("✨ تم تحليل البيانات بنجاح! راجعها ثم اضغط حفظ.");
+                alert("✨ تم تحليل الصوت وتعبئة الحقول بنجاح! راجعها ثم اضغط حفظ.");
             }
-        } catch (error) { alert("حدث خطأ في تحليل البيانات."); }
-        btnAi.innerText = "تحليل وتعبئة تلقائية"; btnAi.disabled = false;
+        } catch (error) { alert("حدث خطأ في تحليل البيانات عبر الذكاء الاصطناعي."); }
+        btnAi.innerText = "تحليل وتعبئة"; btnAi.disabled = false;
     }
 
+    // ==========================================
+    // بقية دوال التطبيق
+    // ==========================================
     window.onload = function() {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('resDate').value = today;
@@ -267,7 +319,7 @@
         const pass = document.getElementById('loginPassword').value;
         if (role === 'secretary' && pass === '1234') {
             localStorage.setItem('userRole', 'secretary');
-            showScreen('secretaryScreen'); loadSecretaryBookings();
+            showScreen('secretaryScreen');
         } else if (role === 'doctor' && pass === '5678') {
             localStorage.setItem('userRole', 'doctor');
             showScreen('doctorScreen'); loadDoctorDashboard();
@@ -276,7 +328,7 @@
 
     window.checkAutoLogin = function() {
         const role = localStorage.getItem('userRole');
-        if(role === 'secretary') { showScreen('secretaryScreen'); loadSecretaryBookings(); }
+        if(role === 'secretary') { showScreen('secretaryScreen'); }
         else if (role === 'doctor') { showScreen('doctorScreen'); loadDoctorDashboard(); }
     }
 
@@ -332,34 +384,6 @@
         btn.innerText = "حفظ الحجز في السحابة"; btn.disabled = false;
     }
 
-    // 1. عرض الحجوزات السريعة (في شاشة الإضافة)
-    window.loadSecretaryBookings = function() {
-        const selectedDate = document.getElementById('resDate').value;
-        if(!selectedDate) return;
-        
-        onValue(ref(db, `Bookings/${CLINIC_CODE}/${selectedDate}`), (snapshot) => {
-            const listDiv = document.getElementById('secBookingsList'); listDiv.innerHTML = ''; 
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-                const bookingsArray = [];
-                for(let key in data) { let b = data[key]; b.firebaseKey = key; bookingsArray.push(b); }
-                bookingsArray.sort((a, b) => a.sequence - b.sequence);
-                bookingsArray.forEach(b => {
-                    const statusText = b.patientStatus ? ` - ${b.patientStatus}` : '';
-                    // تمرير selectedDate لمعرفة تاريخ الحجز عند التعديل
-                    const editParams = `'${b.firebaseKey}', '${selectedDate}', '${b.patientName.replace(/'/g,"\\'")}', '${b.phone || ""}', '${b.sequence}', '${b.time}', '${b.patientStatus ? b.patientStatus.replace(/'/g,"\\'") : ""}'`;
-                    listDiv.innerHTML += `
-                    <div class="booking-card" style="border-right-color: #F59E0B;">
-                        <div class="seq">تسلسل: ${b.sequence}</div>
-                        <div>👤 ${b.patientName} ${statusText}</div>
-                        <button class="edit-btn" onclick="openEditModal(${editParams})">✏️ تعديل الحجز</button>
-                    </div>`;
-                });
-            } else { listDiv.innerHTML = `<div style="text-align:center; color:#94A3B8;">لا توجد حجوزات في هذا اليوم.</div>`; }
-        });
-    }
-
-    // 2. فتح شاشة المراجعة الشاملة (للسكرتير)
     window.openReviewScreen = function() {
         showScreen('secretaryReviewScreen');
         if (!document.getElementById('secReviewDateFilter').value) {
@@ -368,7 +392,6 @@
         loadReviewBookings();
     }
 
-    // 3. جلب بيانات شاشة المراجعة
     window.loadReviewBookings = function() {
         const selectedDate = document.getElementById('secReviewDateFilter').value;
         if(!selectedDate) return;
@@ -383,7 +406,6 @@
                 bookingsArray.forEach(b => {
                     const statusText = b.patientStatus ? `<div class="status-badge">📌 ${b.patientStatus}</div>` : '';
                     const phoneText = b.phone ? `<div>📱 الهاتف: ${b.phone}</div>` : '';
-                    
                     const editParams = `'${b.firebaseKey}', '${selectedDate}', '${b.patientName.replace(/'/g,"\\'")}', '${b.phone || ""}', '${b.sequence}', '${b.time}', '${b.patientStatus ? b.patientStatus.replace(/'/g,"\\'") : ""}'`;
                     
                     listDiv.innerHTML += `
@@ -400,7 +422,6 @@
         });
     }
 
-    // تحديث دالة فتح التعديل لتستقبل التاريخ بشكل ديناميكي
     window.openEditModal = function(key, date, name, phone, seq, time, status) {
         document.getElementById('editKey').value = key; 
         document.getElementById('editDate').value = date; 
@@ -431,7 +452,6 @@
         } catch (error) { alert("حدث خطأ أثناء التعديل: " + error.message); }
     }
 
-    // دالة الطبيب
     window.loadDoctorDashboard = function() {
         const selectedDate = document.getElementById('doctorDateFilter').value;
         if(!selectedDate) return;
