@@ -50,6 +50,18 @@
         button:active { transform: scale(0.98); }
         button.logout-btn { background-color: #334155; margin-top: 15px; }
         
+        /* 🩺 أزرار التاب منيو (Tab Menu) العلوية للطبيب */
+        .doctor-tabs {
+            display: flex; gap: 10px; margin-bottom: 20px; background: #0F172A; padding: 5px; border-radius: 10px;
+        }
+        .tab-btn {
+            flex: 1; padding: 10px; background: transparent; border: none; border-radius: 8px;
+            color: var(--text-muted); font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.3s; margin: 0;
+        }
+        .tab-btn.active {
+            background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3);
+        }
+
         .action-buttons { display: flex; gap: 8px; margin-top: 10px; }
         button.edit-btn { background-color: var(--warning); padding: 8px; font-size: 14px; color: #000; margin: 0; flex: 1; border-radius: 6px; }
         button.delete-btn { background-color: #EF4444; padding: 8px; font-size: 14px; color: #FFF; margin: 0; flex: 1; border-radius: 6px; }
@@ -70,6 +82,13 @@
             color: var(--success); font-size: 15px;
         }
 
+        .total-box {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 1px solid var(--success); padding: 15px; border-radius: 12px;
+            margin-top: 20px; text-align: center; font-size: 18px; font-weight: bold; color: var(--success);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+        }
+
         .hidden { display: none !important; }
         
         .doctor-date-picker {
@@ -78,24 +97,6 @@
         }
         .doctor-date-picker label { margin-bottom: 0; color: var(--primary); }
         .doctor-date-picker input, .doctor-date-picker select { width: auto; margin-bottom: 0; padding: 8px; border: none; }
-
-        .ai-box {
-            background: linear-gradient(145deg, #1e293b, #0f172a);
-            border: 1px solid var(--ai-color); padding: 15px; border-radius: 12px;
-            margin-bottom: 25px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
-        }
-        .ai-box h3 { color: var(--ai-color); border: none; padding: 0; margin-top: 0; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;}
-        
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center; z-index: 1000;
-        }
-        .modal-content {
-            background: var(--card-bg); padding: 20px; border-radius: 15px;
-            width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto;
-        }
-        .close-btn { background-color: #EF4444; margin-top: 10px; }
-        .flex-row { display: flex; gap: 10px; }
     </style>
 </head>
 <body>
@@ -104,7 +105,7 @@
     
     <!-- شاشة تسجيل الدخول -->
     <div id="loginScreen" class="card">
-        <div class="logo-placeholder">⚕️</div>
+        <div class="logo-placeholder">⚕️️</div>
         <h2>نظام العيادة الذكي</h2>
         
         <label>رمز العيادة (Clinic Code):</label>
@@ -119,7 +120,7 @@
         <button id="btnLogin" onclick="login()">تسجيل الدخول</button>
     </div>
 
-    <!-- شاشة السكرتير (الإضافة) -->
+    <!-- شاشة السكرتير (الإضافة والمراجعة) -->
     <div id="secretaryScreen" class="card hidden">
         <div id="welcomeSec" style="color: var(--success); font-weight: bold; margin-bottom: 15px; text-align: center;"></div>
         
@@ -131,18 +132,7 @@
             <option value="">جاري تحميل الأطباء...</option>
         </select>
 
-        <div class="ai-box">
-            <h3>✨ المساعد الصوتي الذكي</h3>
-            <label style="font-size: 12px; margin-bottom:10px;">اضغط على المايكروفون وتحدث، أو اكتب التفاصيل يدوياً.</label>
-            <textarea id="aiInput" rows="3" placeholder="مثال: احجز لأحمد علي باجر العصر بـ 4، رقمه 07812345678، مراجعة خيط"></textarea>
-            
-            <div class="flex-row">
-                <button id="btnMic" onclick="startVoiceRecognition()" style="background-color: #EF4444; flex: 1;">🎙️ تحدث الآن</button>
-                <button id="btnAi" onclick="analyzeWithAI()" style="background-color: var(--ai-color); flex: 2;">تحليل وتعبئة</button>
-            </div>
-        </div>
-
-        <h2>الإدخال اليدوي / المراجعة</h2>
+        <h2>إدخال الحجز</h2>
         <label>تاريخ الحجز:</label>
         <input type="date" id="resDate" required>
         
@@ -159,7 +149,7 @@
         <input type="tel" id="resPhone" placeholder="077... (اختياري)">
         
         <label>ملاحظات الحجز (اختياري):</label>
-        <input type="text" id="resNotes" placeholder="مثال: استشارة، رفع خيط، فحص جديد...">
+        <input type="text" id="resNotes" placeholder="مثال: استشارة، رفع خيط...">
         
         <button onclick="saveBooking()" id="btnSave">حفظ الحجز في السحابة</button>
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
@@ -168,75 +158,53 @@
     <!-- شاشة سجل الحجوزات الشامل للسكرتير -->
     <div id="secretaryReviewScreen" class="card hidden">
         <h2>سجل الحجوزات الشامل</h2>
-        
         <label>اختر الطبيب:</label>
         <select id="reviewDoctorSelect" onchange="loadReviewBookings()">
             <option value="">اختر الطبيب...</option>
         </select>
-
         <div class="doctor-date-picker">
             <label>اختر التاريخ:</label>
             <input type="date" id="secReviewDateFilter" onchange="loadReviewBookings()">
         </div>
-
-        <input type="text" id="secSearchInput" placeholder="🔍 ابحث بالاسم، التسلسل، الهاتف، أو الملاحظات..." oninput="filterSecretaryBookings()">
-        <select id="secTimeFilter" onchange="filterSecretaryBookings()">
-            <option value="">جميع الأوقات</option>
-        </select>
-        
+        <input type="text" id="secSearchInput" placeholder="🔍 ابحث بالاسم، التسلسل..." oninput="filterSecretaryBookings()">
         <div id="secretaryCounter" class="records-counter">📊 إجمالي الحجوزات: 0</div>
-
         <div id="reviewBookingsList"></div>
-        
-        <button onclick="showScreen('secretaryScreen')" style="background-color: var(--primary); margin-top: 20px;">➕ العودة لإضافة حجز</button>
+        <button onclick="showScreen('secretaryScreen')" style="background-color: var(--primary); margin-top: 20px;">➕ العودة</button>
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
     </div>
 
-    <!-- شاشة الطبيب -->
+    <!-- شاشة الطبيب المحدثة مع التابات العلوية -->
     <div id="doctorScreen" class="card hidden">
-        <div id="welcomeDoc" style="color: var(--primary); font-weight: bold; margin-bottom: 15px; text-align: center;"></div>
-        <h2>جدول المراجعين</h2>
+        <div id="welcomeDoc" style="color: var(--primary); font-weight: bold; margin-bottom: 10px; text-align: center;"></div>
         
-        <div class="doctor-date-picker">
-            <label>اختر تاريخ العرض:</label>
-            <input type="date" id="doctorDateFilter" onchange="loadDoctorDashboard()">
+        <!-- 💡 أزرار التاب منيو (التبويبات العلوية للطبيب) -->
+        <div class="doctor-tabs">
+            <button id="tabBookingsBtn" class="tab-btn active" onclick="switchDoctorTab('bookings')">📅 الحجوزات</button>
+            <button id="tabQueueBtn" class="tab-btn" onclick="switchDoctorTab('queue')">🩺 طابور العيادة الحالي</button>
         </div>
 
-        <input type="text" id="docSearchInput" placeholder="🔍 ابحث بالاسم، التسلسل، الهاتف، أو الملاحظات..." oninput="filterDoctorBookings()">
-        <select id="docTimeFilter" onchange="filterDoctorBookings()">
-            <option value="">جميع الأوقات</option>
-        </select>
-        
-        <div id="doctorCounter" class="records-counter">📊 إجمالي المراجعين: 0</div>
+        <!-- 1. قسم الحجوزات (يبقى كما هو) -->
+        <div id="doctorBookingsTabContent">
+            <h2>جدول المراجعين</h2>
+            <div class="doctor-date-picker">
+                <label>اختر تاريخ العرض:</label>
+                <input type="date" id="doctorDateFilter" onchange="loadDoctorDashboard()">
+            </div>
+            <input type="text" id="docSearchInput" placeholder="🔍 ابحث بالاسم، التسلسل، الحالة..." oninput="filterDoctorBookings()">
+            <div id="doctorCounter" class="records-counter">📊 إجمالي المراجعين: 0</div>
+            <div id="bookingsList"></div>
+        </div>
 
-        <div id="bookingsList"></div>
+        <!-- 2. قسم طابور العيادة الحالي (يعرض البيانات المسحوبة من جدول السي شارب مباشرة) -->
+        <div id="doctorQueueTabContent" class="hidden">
+            <h2>طابور العيادة الحالي</h2>
+            <div id="queueList"></div>
+            <div id="queueTotalBox" class="total-box">إجمالي المبالغ: 0 د.ع</div>
+        </div>
+
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
     </div>
 
-</div>
-
-<!-- نافذة التعديل المنبثقة -->
-<div id="editModal" class="modal-overlay hidden">
-    <div class="modal-content">
-        <h2 style="color: var(--warning);">تعديل الحجز ✏️</h2>
-        <input type="hidden" id="editKey">
-        <input type="hidden" id="editDate">
-        <input type="hidden" id="editDocId">
-        <label>اسم المريض:</label>
-        <input type="text" id="editName">
-        <label>رقم الهاتف:</label>
-        <input type="tel" id="editPhone">
-        <label>التسلسل:</label>
-        <input type="number" id="editSeq">
-        <label>الوقت:</label>
-        <input type="time" id="editTime">
-        
-        <label>ملاحظات الحجز:</label>
-        <input type="text" id="editNotes" placeholder="استشارة، رفع خيط...">
-
-        <button onclick="saveEdit()" style="background-color: var(--warning); color: #000;">حفظ التعديلات</button>
-        <button class="close-btn" onclick="closeEditModal()">إلغاء</button>
-    </div>
 </div>
 
 <script type="module">
@@ -252,32 +220,8 @@
     const db = getDatabase(app);
 
     let CLINIC_CODE = localStorage.getItem('clinicCode') || "";
-    let loggedInDoctorId = 0;
-
-    let secretaryAllBookings = [];
     let doctorAllBookings = [];
-
-    async function loadDoctorsDropdowns() {
-        try {
-            const snapshot = await get(ref(db, `DoctorsConfig/${CLINIC_CODE}`));
-            const secSelect = document.getElementById('secretaryDoctorSelect');
-            const revSelect = document.getElementById('reviewDoctorSelect');
-            
-            secSelect.innerHTML = '<option value="">-- اختر الطبيب المعالج --</option>';
-            revSelect.innerHTML = '<option value="">-- اختر الطبيب للعرض --</option>';
-
-            if (snapshot.exists()) {
-                const users = snapshot.val();
-                for (let key in users) {
-                    let u = users[key];
-                    if (u.Role === "الطبيب") {
-                        secSelect.innerHTML += `<option value="${u.DoctorID}">${u.FullName}</option>`;
-                        revSelect.innerHTML += `<option value="${u.DoctorID}">${u.FullName}</option>`;
-                    }
-                }
-            }
-        } catch (e) { console.error(e); }
-    }
+    let doctorQueueBookings = [];
 
     window.login = async function() {
         const clinicCodeInput = document.getElementById('loginClinicCode').value.trim();
@@ -288,10 +232,6 @@
             alert("يرجى إدخال رمز العيادة، اسم المستخدم وكلمة المرور!");
             return;
         }
-
-        const btnLogin = document.getElementById('btnLogin');
-        btnLogin.innerText = "جاري التحقق... ⏳"; 
-        btnLogin.disabled = true;
 
         try {
             const snapshot = await get(ref(db, `DoctorsConfig/${clinicCodeInput}`));
@@ -305,10 +245,8 @@
                     }
                 }
                 if (foundUser) {
-                    // 👈 حفظ رمز العيادة وبيانات الدخول بشكل دائم في ذاكرة المتصفح
                     localStorage.setItem('clinicCode', clinicCodeInput);
                     CLINIC_CODE = clinicCodeInput;
-
                     localStorage.setItem('userRole', foundUser.Role);
                     localStorage.setItem('userFullName', foundUser.FullName);
                     localStorage.setItem('doctorId', foundUser.DoctorID);
@@ -318,107 +256,30 @@
                         showScreen('doctorScreen'); 
                         loadDoctorDashboard();
                     } else {
-                        document.getElementById('welcomeSec').innerText = `أهلاً بك، ${foundUser.FullName} 📋`;
                         showScreen('secretaryScreen'); 
-                        await loadDoctorsDropdowns();
                     }
-                } else { 
-                    alert("❌ اسم المستخدم أو كلمة المرور غير صحيحة!"); 
-                }
-            } else { 
-                alert("❌ رمز العيادة (Clinic Code) غير صحيح أو غير موجود!"); 
-            }
-        } catch (error) { 
-            alert("خطأ في الاتصال: " + error.message); 
-        }
-        
-        btnLogin.innerText = "تسجيل الدخول"; 
-        btnLogin.disabled = false;
+                } else { alert("❌ بيانات الدخول غير صحيحة!"); }
+            } else { alert("❌ رمز العيادة غير صحيح!"); }
+        } catch (error) { alert("خطأ في الاتصال: " + error.message); }
     }
 
     window.checkAutoLogin = async function() {
         const role = localStorage.getItem('userRole');
         const fullName = localStorage.getItem('userFullName');
-        loggedInDoctorId = localStorage.getItem('doctorId');
         CLINIC_CODE = localStorage.getItem('clinicCode') || "";
 
-        // 👈 استرجاع رمز العيادة تلقائياً في خانة الإدخال إذا كان محفوظاً
-        if (CLINIC_CODE) {
-            const codeField = document.getElementById('loginClinicCode');
-            if (codeField) codeField.value = CLINIC_CODE;
-        }
+        if (CLINIC_CODE) document.getElementById('loginClinicCode').value = CLINIC_CODE;
 
         if(role === 'الطبيب') { 
             document.getElementById('welcomeDoc').innerText = `أهلاً بك، د. ${fullName} 🩺`;
             showScreen('doctorScreen'); 
             loadDoctorDashboard(); 
         }
-        else if (role) { 
-            document.getElementById('welcomeSec').innerText = `أهلاً بك، ${fullName} 📋`;
-            showScreen('secretaryScreen'); 
-            await loadDoctorsDropdowns();
-        }
     }
 
     window.logout = function() {
-        // الحفاظ على رمز العيادة محفوظاً حتى عند تسجيل الخروج لتسهيل الدخول لاحقاً، أو مسحه إذا أردت (قمنا بالإبقاء عليه لتجربة أسرع)
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('userFullName');
-        localStorage.removeItem('doctorId');
-        
-        document.getElementById('loginUsername').value = '';
-        document.getElementById('loginPassword').value = '';
+        localStorage.clear();
         showScreen('loginScreen');
-    }
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let recognition;
-    if (SpeechRecognition) {
-        recognition = new SpeechRecognition();
-        recognition.lang = 'ar-IQ';
-        recognition.onstart = () => { document.getElementById('btnMic').innerText = "🔴 جاري الاستماع..."; };
-        recognition.onresult = (e) => { document.getElementById('aiInput').value = e.results[0][0].transcript; analyzeWithAI(); };
-        recognition.onerror = () => resetMicButton();
-        recognition.onend = () => resetMicButton();
-    }
-    function resetMicButton() { document.getElementById('btnMic').innerText = "🎙️ تحدث الآن"; }
-    window.startVoiceRecognition = () => { if(recognition) recognition.start(); else alert("متصفحك لا يدعم الصوت."); }
-
-    window.analyzeWithAI = async function() {
-        const aiText = document.getElementById('aiInput').value;
-        if (!aiText) return;
-        const btnAi = document.getElementById('btnAi');
-        btnAi.innerText = "جاري التحليل... ⏳"; btnAi.disabled = true;
-
-        const GEMINI_API_KEY = "ضع_مفتاح_جيميناي_الخاص_بك_هنا";
-        const todayStr = new Date().toISOString().split('T')[0];
-        const prompt = `أنت مساعد طبي. تاريخ اليوم: ${todayStr}. استخرج بيانات الحجز JSON فقط بدون ماركداون: name, phone, date, time, notes, sequence. النص: "${aiText}"`;
-
-        try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-            });
-            const data = await res.json();
-            const parsed = JSON.parse(data.candidates[0].content.parts[0].text.replace(/```json/g, "").replace(/```/g, "").trim());
-            if(parsed.name) document.getElementById('resName').value = parsed.name;
-            if(parsed.phone) document.getElementById('resPhone').value = parsed.phone;
-            if(parsed.date) document.getElementById('resDate').value = parsed.date;
-            if(parsed.time) document.getElementById('resTime').value = parsed.time;
-            if(parsed.notes) document.getElementById('resNotes').value = parsed.notes;
-            if(parsed.sequence) document.getElementById('resSeq').value = parsed.sequence;
-            document.getElementById('aiInput').value = '';
-            alert("✨ تم تحليل النص وتعبئته بنجاح!");
-        } catch(e) { alert("خطأ في التحليل."); }
-        btnAi.innerText = "تحليل وتعبئة"; btnAi.disabled = false;
-    }
-
-    window.onload = function() {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('resDate').value = today;
-        document.getElementById('doctorDateFilter').value = today;
-        document.getElementById('secReviewDateFilter').value = today;
-        checkAutoLogin();
     }
 
     window.showScreen = function(screenId) {
@@ -426,223 +287,45 @@
         document.getElementById(screenId).classList.remove('hidden');
     }
 
-    window.saveBooking = async function() {
-        const docId = document.getElementById('secretaryDoctorSelect').value;
-        const rDate = document.getElementById('resDate').value;
-        const rSeq = document.getElementById('resSeq').value;
-        const rTime = document.getElementById('resTime').value;
-        const rName = document.getElementById('resName').value;
-        const rPhone = document.getElementById('resPhone').value; 
-        const rNotes = document.getElementById('resNotes').value;
+    // 💡 التحكم بتبويبات شاشة الطبيب
+    window.switchDoctorTab = function(tabName) {
+        const bookingsTab = document.getElementById('doctorBookingsTabContent');
+        const queueTab = document.getElementById('doctorQueueTabContent');
+        const bookingsBtn = document.getElementById('tabBookingsBtn');
+        const queueBtn = document.getElementById('tabQueueBtn');
 
-        if(!docId) { alert("يرجى اختيار الطبيب المعالج!"); return; }
-        if(!rDate || !rSeq || !rTime || !rName) { alert("يرجى تعبئة الحقول الأساسية!"); return; }
-
-        try {
-            const refPath = ref(db, `Bookings/${CLINIC_CODE}/${docId}/${rDate}`);
-            const snapshot = await get(refPath);
-            let conflict = false;
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-                for (let k in data) {
-                    if (data[k].sequence == rSeq) { alert(`❌ التسلسل ${rSeq} محجوز مسبقاً.`); conflict = true; break; }
-                }
-            }
-            if (!conflict) {
-                await push(refPath, {
-                    doctorID: parseInt(docId), 
-                    sequence: parseInt(rSeq), 
-                    time: rTime,
-                    patientName: rName, 
-                    phone: rPhone || "", 
-                    patientStatus: "قيد الانتظار", 
-                    patientNotes: rNotes || "", 
-                    syncState: "Pending", 
-                    timestamp: new Date().getTime()
-                });
-                alert("✅ تم حفظ الحجز بنجاح!");
-                document.getElementById('resName').value = ''; 
-                document.getElementById('resPhone').value = '';
-                document.getElementById('resNotes').value = ''; 
-                document.getElementById('resSeq').value = parseInt(rSeq) + 1;
-            }
-        } catch(e) { alert("خطأ: " + e.message); }
-    }
-
-    window.openReviewScreen = async function() {
-        showScreen('secretaryReviewScreen');
-        await loadDoctorsDropdowns();
-        if (!document.getElementById('secReviewDateFilter').value) {
-            document.getElementById('secReviewDateFilter').value = new Date().toISOString().split('T')[0];
-        }
-    }
-
-    window.loadReviewBookings = function() {
-        const docId = document.getElementById('reviewDoctorSelect').value;
-        const date = document.getElementById('secReviewDateFilter').value;
-        const listDiv = document.getElementById('reviewBookingsList');
-        const counterDiv = document.getElementById('secretaryCounter');
-        const timeFilter = document.getElementById('secTimeFilter');
-        
-        if(!docId || !date) {
-            listDiv.innerHTML = `<div style="text-align:center; color:#94A3B8; padding:20px;">يرجى اختيار الطبيب والتاريخ.</div>`;
-            counterDiv.innerText = "📊 إجمالي الحجوزات: 0";
-            return;
-        }
-
-        onValue(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}`), (snapshot) => {
-            secretaryAllBookings = [];
-            timeFilter.innerHTML = '<option value="">جميع الأوقات</option>';
-            const timesSet = new Set();
-
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-                for(let k in data) { 
-                    let b = data[k]; 
-                    b.key = k; 
-                    secretaryAllBookings.push(b);
-                    if(b.time) timesSet.add(b.time);
-                }
-                secretaryAllBookings.sort((a, b) => a.sequence - b.sequence);
-                
-                timesSet.forEach(t => {
-                    timeFilter.innerHTML += `<option value="${t}">${t}</option>`;
-                });
-            }
-            filterSecretaryBookings();
-        });
-    }
-
-    window.filterSecretaryBookings = function() {
-        const query = document.getElementById('secSearchInput').value.toLowerCase().trim();
-        const selectedTime = document.getElementById('secTimeFilter').value;
-        const listDiv = document.getElementById('reviewBookingsList');
-        const counterDiv = document.getElementById('secretaryCounter');
-        const docId = document.getElementById('reviewDoctorSelect').value;
-        const date = document.getElementById('secReviewDateFilter').value;
-
-        let filtered = secretaryAllBookings.filter(b => {
-            const nameMatch = b.patientName && b.patientName.toLowerCase().includes(query);
-            const phoneMatch = b.phone && b.phone.toLowerCase().includes(query);
-            const seqMatch = b.sequence && b.sequence.toString().includes(query);
-            const notesMatch = b.patientNotes && b.patientNotes.toLowerCase().includes(query);
-            const statusMatch = b.patientStatus && b.patientStatus.toLowerCase().includes(query);
-            const queryMatch = !query || nameMatch || phoneMatch || seqMatch || notesMatch || statusMatch;
-
-            const timeMatch = !selectedTime || b.time === selectedTime;
-
-            return queryMatch && timeMatch;
-        });
-
-        counterDiv.innerText = `📊 إجمالي الحجوزات المعروضة: ${filtered.length}`;
-        listDiv.innerHTML = '';
-
-        if(filtered.length > 0) {
-            filtered.forEach(b => {
-                let statusBg = "#334155"; 
-                let statusText = b.patientStatus || "قيد الانتظار";
-
-                if (statusText === "حاضر") {
-                    statusBg = "#10B981"; 
-                } else if (statusText === "لم يحضر") {
-                    statusBg = "#F59E0B"; 
-                } else if (statusText === "تم الالغاء") {
-                    statusBg = "#EF4444"; 
-                }
-
-                const statusHtml = `<div class="status-badge" style="background-color: ${statusBg}; color: white; font-weight: bold; margin-bottom: 6px;">📌 الحالة: ${statusText}</div>`;
-                const notesHtml = b.patientNotes ? `<div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">💬 ملاحظات: ${b.patientNotes}</div>` : '';
-                const phoneText = b.phone ? `<div>📱 الهاتف: ${b.phone}</div>` : ''; 
-                const editParams = `'${b.key}', '${docId}', '${date}', '${b.patientName.replace(/'/g,"\\'")}', '${b.phone || ""}', '${b.sequence}', '${b.time}', '${b.patientNotes ? b.patientNotes.replace(/'/g,"\\'") : ""}'`;
-                
-                listDiv.innerHTML += `
-                <div class="booking-card" style="border-right-color: ${statusBg};">
-                    <div class="seq">تسلسل: ${b.sequence}</div>
-                    <div>👤 المريض: ${b.patientName}</div>
-                    <div>🕒 الوقت: ${b.time}</div>
-                    ${phoneText}
-                    ${statusHtml}
-                    ${notesHtml}
-                    <div class="action-buttons">
-                        <button class="edit-btn" onclick="openEditModal(${editParams})">✏️ تعديل</button>
-                        <button class="delete-btn" onclick="deleteBooking('${docId}', '${date}', '${b.key}', '${b.patientName.replace(/'/g,"\\'")}')">🗑️ حذف</button>
-                    </div>
-                </div>`;
-            });
+        if (tabName === 'bookings') {
+            bookingsTab.classList.remove('hidden');
+            queueTab.classList.add('hidden');
+            bookingsBtn.classList.add('active');
+            queueBtn.classList.remove('active');
         } else {
-            listDiv.innerHTML = `<div style="text-align:center; color:#94A3B8; padding:20px;">لا توجد نتائج مطابقة للبحث.</div>`;
-        }
-    }
-        
-    window.deleteBooking = async function(docId, date, key, patientName) {
-        if (confirm(`🗑️ هل أنت متأكد من حذف حجز المريض (${patientName}) نهائياً؟`)) {
-            try {
-                await remove(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}/${key}`));
-                alert("✅ تم حذف الحجز بنجاح.");
-            } catch (error) {
-                alert("❌ حدث خطأ أثناء الحذف: " + error.message);
-            }
+            bookingsTab.classList.add('hidden');
+            queueTab.classList.remove('hidden');
+            bookingsBtn.classList.remove('active');
+            queueBtn.classList.add('active');
+            loadDoctorQueue(); // جلب بيانات الطابور الفعلي من السي شارب
         }
     }
 
-    window.openEditModal = function(key, docId, date, name, phone, seq, time, notes) {
-        document.getElementById('editKey').value = key; 
-        document.getElementById('editDocId').value = docId; 
-        document.getElementById('editDate').value = date; 
-        document.getElementById('editName').value = name; 
-        document.getElementById('editPhone').value = phone;
-        document.getElementById('editSeq').value = seq; 
-        document.getElementById('editTime').value = time;
-        document.getElementById('editNotes').value = notes; 
-        document.getElementById('editModal').classList.remove('hidden');
+    window.onload = function() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('doctorDateFilter').value = today;
+        checkAutoLogin();
     }
 
-    window.closeEditModal = function() { document.getElementById('editModal').classList.add('hidden'); }
-
-    window.saveEdit = async function() {
-        const key = document.getElementById('editKey').value; 
-        const docId = document.getElementById('editDocId').value; 
-        const date = document.getElementById('editDate').value;
-        
-        const updatedData = {
-            doctorID: parseInt(docId),
-            patientName: document.getElementById('editName').value, 
-            phone: document.getElementById('editPhone').value || "", 
-            sequence: parseInt(document.getElementById('editSeq').value), 
-            time: document.getElementById('editTime').value,
-            patientNotes: document.getElementById('editNotes').value, 
-            patientStatus: "قيد الانتظار",
-            syncState: "Pending"
-        };
-        try {
-            await update(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}/${key}`), updatedData);
-            alert("تم تحديث الحجز بنجاح!"); closeEditModal();
-        } catch (error) { alert("خطأ: " + error.message); }
-    }
-
+    // جلب حجوزات الطبيب العادية
     window.loadDoctorDashboard = function() {
         const selectedDate = document.getElementById('doctorDateFilter').value;
         const docId = localStorage.getItem('doctorId');
-        const timeFilter = document.getElementById('docTimeFilter');
-
         if(!selectedDate || !docId) return;
 
         onValue(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${selectedDate}`), (snapshot) => {
             doctorAllBookings = [];
-            timeFilter.innerHTML = '<option value="">جميع الأوقات</option>';
-            const timesSet = new Set();
-
             if (snapshot.exists()) {
                 const data = snapshot.val();
-                for(let k in data) { 
-                    doctorAllBookings.push(data[k]); 
-                    if(data[k].time) timesSet.add(data[k].time);
-                }
+                for(let k in data) doctorAllBookings.push(data[k]);
                 doctorAllBookings.sort((a, b) => a.sequence - b.sequence);
-
-                timesSet.forEach(t => {
-                    timeFilter.innerHTML += `<option value="${t}">${t}</option>`;
-                });
             }
             filterDoctorBookings();
         });
@@ -650,56 +333,71 @@
 
     window.filterDoctorBookings = function() {
         const query = document.getElementById('docSearchInput').value.toLowerCase().trim();
-        const selectedTime = document.getElementById('docTimeFilter').value;
         const listDiv = document.getElementById('bookingsList');
         const counterDiv = document.getElementById('doctorCounter');
 
         let filtered = doctorAllBookings.filter(b => {
             const nameMatch = b.patientName && b.patientName.toLowerCase().includes(query);
-            const phoneMatch = b.phone && b.phone.toLowerCase().includes(query);
-            const seqMatch = b.sequence && b.sequence.toString().includes(query);
-            const notesMatch = b.patientNotes && b.patientNotes.toLowerCase().includes(query);
             const statusMatch = b.patientStatus && b.patientStatus.toLowerCase().includes(query);
-            const queryMatch = !query || nameMatch || phoneMatch || seqMatch || notesMatch || statusMatch;
-
-            const timeMatch = !selectedTime || b.time === selectedTime;
-
-            return queryMatch && timeMatch;
+            return !query || nameMatch || statusMatch;
         });
 
-        counterDiv.innerText = `📊 إجمالي المراجعين المعروضين: ${filtered.length}`;
+        counterDiv.innerText = `📊 إجمالي المراجعين: ${filtered.length}`;
         listDiv.innerHTML = '';
 
-        if(filtered.length > 0) {
-            filtered.forEach(b => {
-                let statusBg = "#334155"; 
-                let statusText = b.patientStatus || "قيد الانتظار";
+        filtered.forEach(b => {
+            let statusBg = "#334155"; 
+            let statusText = b.patientStatus || "قيد الانتظار";
+            if (statusText === "حاضر") statusBg = "#10B981"; 
+            else if (statusText === "لم يحضر") statusBg = "#F59E0B"; 
+            else if (statusText === "تم الالغاء") statusBg = "#EF4444"; 
 
-                if (statusText === "حاضر") {
-                    statusBg = "#10B981"; 
-                } else if (statusText === "لم يحضر") {
-                    statusBg = "#F59E0B"; 
-                } else if (statusText === "تم الالغاء") {
-                    statusBg = "#EF4444"; 
-                }
+            listDiv.innerHTML += `
+            <div class="booking-card" style="border-right-color: ${statusBg};">
+                <div class="seq">تسلسل: ${b.sequence}</div>
+                <div>👤 المريض: ${b.patientName}</div>
+                <div>🕒 الوقت: ${b.time}</div>
+                <div class="status-badge" style="background-color: ${statusBg}; color: white; font-weight: bold;">📌 الحالة: ${statusText}</div>
+                ${b.patientNotes ? `<div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">💬 ملاحظات: ${b.patientNotes}</div>` : ''}
+            </div>`;
+        });
+    }
 
-                const statusHtml = `<div class="status-badge" style="background-color: ${statusBg}; color: white; font-weight: bold; margin-bottom: 6px;">📌 الحالة: ${statusText}</div>`;
-                const notesHtml = b.patientNotes ? `<div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">💬 ملاحظات: ${b.patientNotes}</div>` : '';
-                const phoneHtml = b.phone ? `<div>📱 الهاتف: ${b.phone}</div>` : ''; 
+    // 🩺 جلب بيانات طابور العيادة الحالي المحدثة من السي شارب فقط (عرض فقط)
+    window.loadDoctorQueue = function() {
+        const docId = localStorage.getItem('doctorId');
+        if(!docId) return;
 
-                listDiv.innerHTML += `
-                <div class="booking-card" style="border-right-color: ${statusBg};">
-                    <div class="seq">تسلسل: ${b.sequence}</div>
-                    <div>👤 المريض: ${b.patientName}</div>
-                    <div>🕒 الوقت: ${b.time}</div>
-                    ${phoneHtml}
-                    ${statusHtml}
-                    ${notesHtml}
-                </div>`;
-            });
-        } else {
-            listDiv.innerHTML = `<div style="text-align:center; color:#94A3B8; padding:20px;">لا توجد نتائج مطابقة للبحث.</div>`;
-        }
+        onValue(ref(db, `ClinicQueue/${CLINIC_CODE}/${docId}`), (snapshot) => {
+            const queueListDiv = document.getElementById('queueList');
+            const totalBoxDiv = document.getElementById('queueTotalBox');
+            queueListDiv.innerHTML = '';
+            
+            let totalAmount = 0;
+
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                let queueItems = [];
+                for(let k in data) queueItems.push(data[k]);
+
+                queueItems.forEach(item => {
+                    let price = parseFloat(item.payAmount) || 0;
+                    totalAmount += price;
+
+                    queueListDiv.innerHTML += `
+                    <div class="booking-card" style="border-right-color: var(--success);">
+                        <div class="seq">تسلسل الحجز: ${item.sequence || 'غير متوفر'}</div>
+                        <div>👤 اسم المريض: ${item.patientName}</div>
+                        <div>💰 المبلغ: ${price.toLocaleString()} د.ع</div>
+                        <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">📋 تفاصيل الدفع: ${item.paymentDetails || 'كشفية عادية'}</div>
+                    </div>`;
+                });
+            } else {
+                queueListDiv.innerHTML = `<div style="text-align:center; color:#94A3B8; padding:20px;">لا يوجد مراجعين في الطابور حالياً.</div>`;
+            }
+
+            totalBoxDiv.innerText = `إجمالي المبالغ: ${totalAmount.toLocaleString()} د.ع`;
+        });
     }
 </script>
 </body>
