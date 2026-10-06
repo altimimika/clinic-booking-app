@@ -8,7 +8,7 @@
     <style>
         :root {
             --primary: #2196F3; --bg-color: #0F172A; --card-bg: #1E293B;
-            --text-main: #F8FAFC; --text-muted: #94A3B8; --warning: #F59E0B; --ai-color: #8B5CF6; --success: #10B981; --danger: #EF4444;
+            --text-main: #F8FAFC; --text-muted: #94A3B8; --warning: #F59E0B; --success: #10B981; --danger: #EF4444;
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -24,7 +24,6 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         h2 { text-align: center; color: var(--primary); margin-top: 0; }
-        h3 { color: var(--primary); border-bottom: 1px solid #334155; padding-bottom: 10px; }
         
         .logo-placeholder {
             width: 80px; height: 80px; background: var(--primary); 
@@ -50,7 +49,6 @@
         button:active { transform: scale(0.98); }
         button.logout-btn { background-color: #334155; margin-top: 15px; }
         
-        /* 🩺 أزرار التاب منيو (Tab Menu) العلوية للطبيب */
         .doctor-tabs {
             display: flex; gap: 10px; margin-bottom: 20px; background: #0F172A; padding: 5px; border-radius: 10px;
         }
@@ -62,12 +60,11 @@
             background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3);
         }
 
-        /* أزرار الإجراءات الثلاثة للمريض في قائمة السكرتير */
         .patient-actions {
             display: flex; gap: 8px; margin-top: 12px; border-top: 1px solid #334155; padding-top: 10px;
         }
         .action-icon-btn {
-            flex: 1; padding: 8px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; color: white; margin: 0;
+            flex: 1; padding: 8px; border: none; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; color: white; margin: 0;
         }
         .btn-call { background-color: var(--success); }
         .btn-edit { background-color: var(--warning); color: #000; }
@@ -79,8 +76,7 @@
         }
         .booking-card .seq { color: var(--primary); font-size: 18px; font-weight: bold; margin-bottom: 5px;}
         .status-badge {
-            display: inline-block; background-color: #334155; color: #F8FAFC;
-            padding: 3px 8px; border-radius: 4px; font-size: 12px; margin-top: 5px;
+            display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 12px; margin-top: 5px; font-weight: bold; color: white;
         }
         
         .records-counter {
@@ -127,7 +123,7 @@
         <button id="btnLogin" onclick="login()">تسجيل الدخول</button>
     </div>
 
-    <!-- شاشة السكرتير (الإضافة والمراجعة) -->
+    <!-- شاشة السكرتير -->
     <div id="secretaryScreen" class="card hidden">
         <div id="welcomeSec" style="color: var(--success); font-weight: bold; margin-bottom: 15px; text-align: center;"></div>
         
@@ -140,7 +136,7 @@
         </select>
 
         <h2 id="formTitle">إدخال الحجز</h2>
-        <input type="hidden" id="editBookingKey" value=""> <!-- لتخزين مفتاح التعديل إن وجد -->
+        <input type="hidden" id="editBookingKey" value="">
 
         <label>تاريخ الحجز:</label>
         <input type="date" id="resDate" required>
@@ -154,18 +150,18 @@
         <label>اسم المريض:</label>
         <input type="text" id="resName" placeholder="الاسم الثلاثي" required>
         
-        <label>رقم الهاتف (اختياري):</label>
-        <input type="tel" id="resPhone" placeholder="077... (اختياري)">
+        <label>رقم الهاتف:</label>
+        <input type="tel" id="resPhone" placeholder="077...">
         
-        <label>ملاحظات الحجز (اختياري):</label>
-        <input type="text" id="resNotes" placeholder="مثال: استشارة، رفع خيط...">
+        <label>ملاحظات الحجز:</label>
+        <input type="text" id="resNotes" placeholder="ملاحظات...">
         
         <button onclick="saveBooking()" id="btnSave">حفظ الحجز في السحابة</button>
         <button id="btnCancelEdit" class="hidden" onclick="cancelEditMode()" style="background-color: #64748B;">إلغاء التعديل</button>
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
     </div>
 
-    <!-- شاشة سجل الحجوزات الشامل للسكرتير -->
+    <!-- شاشة سجل الحجوزات للسكرتير -->
     <div id="secretaryReviewScreen" class="card hidden">
         <h2>سجل الحجوزات الشامل</h2>
         <label>اختر الطبيب:</label>
@@ -183,17 +179,15 @@
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
     </div>
 
-    <!-- شاشة الطبيب المحدثة مع التابات العلوية -->
+    <!-- شاشة الطبيب -->
     <div id="doctorScreen" class="card hidden">
         <div id="welcomeDoc" style="color: var(--primary); font-weight: bold; margin-bottom: 10px; text-align: center;"></div>
         
-        <!-- 💡 أزرار التاب منيو (التبويبات العلوية للطبيب) -->
         <div class="doctor-tabs">
             <button id="tabBookingsBtn" class="tab-btn active" onclick="switchDoctorTab('bookings')">📅 الحجوزات</button>
             <button id="tabQueueBtn" class="tab-btn" onclick="switchDoctorTab('queue')">🩺 طابور العيادة الحالي</button>
         </div>
 
-        <!-- 1. قسم الحجوزات (يبقى كما هو) -->
         <div id="doctorBookingsTabContent">
             <h2>جدول المراجعين</h2>
             <div class="doctor-date-picker">
@@ -205,7 +199,6 @@
             <div id="bookingsList"></div>
         </div>
 
-        <!-- 2. قسم طابور العيادة الحالي (يعرض البيانات المسحوبة من جدول السي شارب مباشرة) -->
         <div id="doctorQueueTabContent" class="hidden">
             <h2>طابور العيادة الحالي</h2>
             <div id="queueList"></div>
@@ -219,7 +212,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-    import { getDatabase, ref, push, set, update, get, remove, onValue } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
+    import { getDatabase, ref, push, update, get, remove, onValue } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
 
     const firebaseConfig = {
       databaseURL: "https://myclinicsystem-f978f-default-rtdb.firebaseio.com/", 
@@ -367,8 +360,8 @@
             doctorAllBookings = [];
             if (snapshot.exists()) {
                 const data = snapshot.val();
-                for(let k in data) doctorAllBookings.push(data[k]);
-                doctorAllBookings.sort((a, b) => a.sequence - b.sequence);
+                for(let k in data) doctorAllBookings.push({ id: k, ...data[k] });
+                doctorAllBookings.sort((a, b) => (parseInt(a.sequence) || 0) - (parseInt(b.sequence) || 0));
             }
             filterDoctorBookings();
         });
@@ -389,19 +382,28 @@
         listDiv.innerHTML = '';
 
         filtered.forEach(b => {
-            let statusBg = "#334155"; 
             let statusText = b.patientStatus || "قيد الانتظار";
-            if (statusText === "حاضر") statusBg = "#10B981"; 
-            else if (statusText === "لم يحضر") statusBg = "#F59E0B"; 
-            else if (statusText === "تم الالغاء") statusBg = "#EF4444"; 
+            let statusBg = "#334155"; 
+            if (statusText === "حاضر") statusBg = "#10B981";       // 🟢 أخضر
+            else if (statusText === "لم يحضر") statusBg = "#F59E0B"; // 🟠 برتقالي
+            else if (statusText === "تم الالغاء") statusBg = "#EF4444"; // 🔴 أحمر
+
+            let phoneNum = b.patientPhone || b.phone || '';
+            let phoneBtnHtml = phoneNum ? `<button class="action-icon-btn btn-call" onclick="callPatient('${phoneNum}')">📞 اتصال</button>` : '';
 
             listDiv.innerHTML += `
             <div class="booking-card" style="border-right-color: ${statusBg};">
-                <div class="seq">تسلسل: ${b.sequence}</div>
-                <div>👤 المريض: ${b.patientName}</div>
-                <div>🕒 الوقت: ${b.time}</div>
-                <div class="status-badge" style="background-color: ${statusBg}; color: white; font-weight: bold;">📌 الحالة: ${statusText}</div>
+                <div class="seq">تسلسل: ${b.sequence || '---'}</div>
+                <div>👤 المريض: ${b.patientName || 'بدون اسم'}</div>
+                <div>🕒 الوقت: ${b.time || '---'} | 📱 الهاتف: ${phoneNum || 'لا يوجد'}</div>
+                <div class="status-badge" style="background-color: ${statusBg};">📌 الحالة: ${statusText}</div>
                 ${b.patientNotes ? `<div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">💬 ملاحظات: ${b.patientNotes}</div>` : ''}
+                
+                <div class="patient-actions">
+                    ${phoneBtnHtml}
+                    <button class="action-icon-btn btn-edit" onclick="editBooking('${b.id}', '${b.sequence || ''}', '${b.time || ''}', '${b.patientName || ''}', '${phoneNum}', '${b.patientNotes || ''}')">✏️ تعديل</button>
+                    <button class="action-icon-btn btn-delete" onclick="deleteBookingFromDoctor('${b.id}')">🗑️ حذف</button>
+                </div>
             </div>`;
         });
     }
@@ -442,7 +444,7 @@
         });
     }
 
-    // 📌 حفظ أو تعديل حجز من قبل السكرتير
+    // حفظ أو تعديل حجز
     window.saveBooking = async function() {
         const docId = document.getElementById('secretaryDoctorSelect').value;
         const date = document.getElementById('resDate').value;
@@ -463,19 +465,17 @@
                 sequence: seq,
                 time: time,
                 patientName: name,
-                patientPhone: phone,
+                patientPhone: phone,   // توحيد الحقل ليطابق C#
                 patientNotes: notes,
                 patientStatus: "قيد الانتظار",
                 timestamp: Date.now()
             };
 
             if (editKey) {
-                // تحديث حجز موجود
                 await update(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}/${editKey}`), bookingData);
                 alert("✅ تم تحديث الحجز بنجاح!");
                 cancelEditMode();
             } else {
-                // إضافة حجز جديد
                 await push(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}`), bookingData);
                 alert("✅ تم حفظ الحجز بنجاح!");
                 document.getElementById('resName').value = '';
@@ -518,31 +518,29 @@
         listDiv.innerHTML = '';
 
         filtered.forEach(b => {
-            let phoneBtnHtml = b.patientPhone ? `<button class="action-icon-btn btn-call" onclick="callPatient('${b.patientPhone}')">📞 اتصال</button>` : '';
+            let phoneNum = b.patientPhone || b.phone || '';
+            let phoneBtnHtml = phoneNum ? `<button class="action-icon-btn btn-call" onclick="callPatient('${phoneNum}')">📞 اتصال</button>` : '';
             
             listDiv.innerHTML += `
             <div class="booking-card">
                 <div class="seq">تسلسل: ${b.sequence} - ${b.patientName}</div>
-                <div>🕒 الوقت: ${b.time} | 📱 الهاتف: ${b.patientPhone || 'لا يوجد'}</div>
-                <div class="status-badge" style="background-color: #334155; color: white;">📌 الحالة: ${b.patientStatus || 'قيد الانتظار'}</div>
+                <div>🕒 الوقت: ${b.time || '---'} | 📱 الهاتف: ${phoneNum || 'لا يوجد'}</div>
+                <div class="status-badge" style="background-color: #334155;">📌 الحالة: ${b.patientStatus || 'قيد الانتظار'}</div>
                 ${b.patientNotes ? `<div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">💬 ملاحظات: ${b.patientNotes}</div>` : ''}
                 
-                <!-- الأزرار الثلاثة (اتصال، تعديل، حذف) -->
                 <div class="patient-actions">
                     ${phoneBtnHtml}
-                    <button class="action-icon-btn btn-edit" onclick="editBooking('${b.id}', '${b.sequence}', '${b.time}', '${b.patientName}', '${b.patientPhone || ''}', '${b.patientNotes || ''}')">✏️ تعديل</button>
+                    <button class="action-icon-btn btn-edit" onclick="editBooking('${b.id}', '${b.sequence || ''}', '${b.time || ''}', '${b.patientName || ''}', '${phoneNum}', '${b.patientNotes || ''}')">✏️ تعديل</button>
                     <button class="action-icon-btn btn-delete" onclick="deleteBooking('${b.id}')">🗑️ حذف</button>
                 </div>
             </div>`;
         });
     }
 
-    // وظيفة الاتصال المباشر بالمريض عبر الموبايل
     window.callPatient = function(phone) {
         window.location.href = `tel:${phone}`;
     }
 
-    // تفعيل وضع التعديل للسكرتير
     window.editBooking = function(id, seq, time, name, phone, notes) {
         document.getElementById('editBookingKey').value = id;
         document.getElementById('resSeq').value = seq;
@@ -558,7 +556,6 @@
         showScreen('secretaryScreen');
     }
 
-    // إلغاء وضع التعديل والعودة للإضافة العادية
     window.cancelEditMode = function() {
         document.getElementById('editBookingKey').value = "";
         document.getElementById('resName').value = '';
@@ -569,16 +566,26 @@
         document.getElementById('btnCancelEdit').classList.add('hidden');
     }
 
-    // حذف الحجز من السحابة
     window.deleteBooking = async function(bookingId) {
         if (!confirm("هل أنت متأكد من حذف هذا الحجز؟")) return;
-
         const docId = document.getElementById('reviewDoctorSelect').value;
         const date = document.getElementById('secReviewDateFilter').value;
 
         try {
             await remove(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}/${bookingId}`));
             alert("🗑️ تم حذف الحجز بنجاح!");
+        } catch (e) {
+            alert("خطأ أثناء الحذف: " + e.message);
+        }
+    }
+
+    window.deleteBookingFromDoctor = async function(bookingId) {
+        if (!confirm("هل أنت متأكد من حذف هذا الحجز؟")) return;
+        const docId = localStorage.getItem('doctorId');
+        const date = document.getElementById('doctorDateFilter').value;
+
+        try {
+            await remove(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}/${bookingId}`));
         } catch (e) {
             alert("خطأ أثناء الحذف: " + e.message);
         }
