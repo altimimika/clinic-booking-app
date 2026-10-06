@@ -462,14 +462,15 @@
 
         try {
             const bookingData = {
-                sequence: seq,
-                time: time,
-                patientName: name,
-                patientPhone: phone,   // توحيد الحقل ليطابق C#
-                patientNotes: notes,
-                patientStatus: "قيد الانتظار",
-                timestamp: Date.now()
-            };
+    sequence: seq,
+    time: time,
+    patientName: name,
+    phone: phone,         // رقم الهاتف
+    patientPhone: phone,  // لدعم الاحتمالين
+    patientNotes: notes,
+    patientStatus: "قيد الانتظار",
+    timestamp: Date.now()
+};
 
             if (editKey) {
                 await update(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}/${editKey}`), bookingData);
