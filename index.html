@@ -105,7 +105,7 @@
     
     <!-- شاشة تسجيل الدخول -->
     <div id="loginScreen" class="card">
-        <div class="logo-placeholder">⚕️️</div>
+        <div class="logo-placeholder">⚕</div>
         <h2>نظام العيادة الذكي</h2>
         
         <label>رمز العيادة (Clinic Code):</label>
@@ -124,7 +124,7 @@
     <div id="secretaryScreen" class="card hidden">
         <div id="welcomeSec" style="color: var(--success); font-weight: bold; margin-bottom: 15px; text-align: center;"></div>
         
-        <button onclick="openReviewScreen()" style="background-color: var(--success);">📅 سجل الحجوزات (مراجعة وتعديل)</button>
+        <button onclick="showScreen('secretaryReviewScreen')" style="background-color: var(--success);">📅 سجل الحجوزات (مراجعة وتعديل)</button>
         <hr style="border-color: #334155; margin: 20px 0;">
 
         <label>اختر الطبيب المعالج:</label>
@@ -251,12 +251,15 @@
                     localStorage.setItem('userFullName', foundUser.FullName);
                     localStorage.setItem('doctorId', foundUser.DoctorID);
 
-                    if (foundUser.Role === "الطبيب") {
+                    const role = (foundUser.Role || "").trim().toLowerCase();
+                    if (role.includes("طبيب") || role.includes("doctor")) {
                         document.getElementById('welcomeDoc').innerText = `أهلاً بك، د. ${foundUser.FullName} 🩺`;
                         showScreen('doctorScreen'); 
                         loadDoctorDashboard();
                     } else {
+                        document.getElementById('welcomeSec').innerText = `أهلاً بك، ${foundUser.FullName} (سكرتارية) 📋`;
                         showScreen('secretaryScreen'); 
+                        loadDoctorsListForSecretary(users);
                     }
                 } else { alert("❌ بيانات الدخول غير صحيحة!"); }
             } else { alert("❌ رمز العيادة غير صحيح!"); }
@@ -269,11 +272,42 @@
         CLINIC_CODE = localStorage.getItem('clinicCode') || "";
 
         if (CLINIC_CODE) document.getElementById('loginClinicCode').value = CLINIC_CODE;
+        if (!role) return;
 
-        if(role === 'الطبيب') { 
-            document.getElementById('welcomeDoc').innerText = `أهلاً بك، د. ${fullName} 🩺`;
-            showScreen('doctorScreen'); 
-            loadDoctorDashboard(); 
+        try {
+            const snapshot = await get(ref(db, `DoctorsConfig/${CLINIC_CODE}`));
+            const users = snapshot.exists() ? snapshot.val() : null;
+
+            const userRoleLower = role.trim().toLowerCase();
+            if(userRoleLower.includes('طبيب') || userRoleLower.includes('doctor')) { 
+                document.getElementById('welcomeDoc').innerText = `أهلاً بك، د. ${fullName} 🩺`;
+                showScreen('doctorScreen'); 
+                loadDoctorDashboard(); 
+            } else {
+                document.getElementById('welcomeSec').innerText = `أهلاً بك، ${fullName} (سكرتارية) 📋`;
+                showScreen('secretaryScreen');
+                if (users) loadDoctorsListForSecretary(users);
+            }
+        } catch (e) {
+            console.error("Auto login error:", e);
+        }
+    }
+
+    window.loadDoctorsListForSecretary = function(usersObj) {
+        const secSelect = document.getElementById('secretaryDoctorSelect');
+        const reviewSelect = document.getElementById('reviewDoctorSelect');
+        
+        secSelect.innerHTML = '<option value="">اختر الطبيب المعالج...</option>';
+        reviewSelect.innerHTML = '<option value="">اختر الطبيب لعرض السجل...</option>';
+
+        for (let key in usersObj) {
+            let user = usersObj[key];
+            let role = (user.Role || "").trim().toLowerCase();
+            
+            if (role.includes("طبيب") || role.includes("doctor")) {
+                secSelect.innerHTML += `<option value="${user.DoctorID}">${user.FullName}</option>`;
+                reviewSelect.innerHTML += `<option value="${user.DoctorID}">${user.FullName}</option>`;
+            }
         }
     }
 
@@ -311,6 +345,8 @@
     window.onload = function() {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('doctorDateFilter').value = today;
+        document.getElementById('secReviewDateFilter').value = today;
+        document.getElementById('resDate').value = today;
         checkAutoLogin();
     }
 
@@ -397,6 +433,81 @@
             }
 
             totalBoxDiv.innerText = `إجمالي المبالغ: ${totalAmount.toLocaleString()} د.ع`;
+        });
+    }
+
+    // وظائف السكرتير لإضافة الحجوزات والمراجعة
+    window.saveBooking = async function() {
+        const docId = document.getElementById('secretaryDoctorSelect').value;
+        const date = document.getElementById('resDate').value;
+        const seq = document.getElementById('resSeq').value;
+        const time = document.getElementById('resTime').value;
+        const name = document.getElementById('resName').value.trim();
+        const phone = document.getElementById('resPhone').value.trim();
+        const notes = document.getElementById('resNotes').value.trim();
+
+        if(!docId || !date || !seq || !time || !name) {
+            alert("يرجى ملء الحقول الإجبارية واختيار الطبيب!");
+            return;
+        }
+
+        try {
+            const bookingData = {
+                sequence: seq,
+                time: time,
+                patientName: name,
+                patientPhone: phone,
+                patientNotes: notes,
+                patientStatus: "قيد الانتظار",
+                timestamp: Date.now()
+            };
+
+            await push(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}`), bookingData);
+            alert("✅ تم حفظ الحجز بنجاح!");
+            document.getElementById('resName').value = '';
+            document.getElementById('resPhone').value = '';
+            document.getElementById('resNotes').value = '';
+            document.getElementById('resSeq').value = parseInt(seq) + 1;
+        } catch (e) {
+            alert("خطأ أثناء حفظ الحجز: " + e.message);
+        }
+    }
+
+    window.loadReviewBookings = function() {
+        const docId = document.getElementById('reviewDoctorSelect').value;
+        const date = document.getElementById('secReviewDateFilter').value;
+        if(!docId || !date) return;
+
+        onValue(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}`), (snapshot) => {
+            window.reviewBookingsData = [];
+            if(snapshot.exists()) {
+                const data = snapshot.val();
+                for(let k in data) {
+                    window.reviewBookingsData.push({ id: k, ...data[k] });
+                }
+            }
+            filterSecretaryBookings();
+        });
+    }
+
+    window.filterSecretaryBookings = function() {
+        const query = document.getElementById('secSearchInput').value.toLowerCase().trim();
+        const listDiv = document.getElementById('reviewBookingsList');
+        const counterDiv = document.getElementById('secretaryCounter');
+
+        let filtered = (window.reviewBookingsData || []).filter(b => {
+            return !query || (b.patientName && b.patientName.toLowerCase().includes(query)) || (b.sequence && b.sequence.toString().includes(query));
+        });
+
+        counterDiv.innerText = `📊 إجمالي الحجوزات: ${filtered.length}`;
+        listDiv.innerHTML = '';
+
+        filtered.forEach(b => {
+            listDiv.innerHTML += `
+            <div class="booking-card">
+                <div class="seq">تسلسل: ${b.sequence} - ${b.patientName}</div>
+                <div>🕒 الوقت: ${b.time} | الحالة: ${b.patientStatus || 'قيد الانتظار'}</div>
+            </div>`;
         });
     }
 </script>
