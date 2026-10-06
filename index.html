@@ -50,12 +50,10 @@
         button:active { transform: scale(0.98); }
         button.logout-btn { background-color: #334155; margin-top: 15px; }
         
-        /* أزرار الإجراءات داخل الكارد الخاص بالسكرتير */
         .action-buttons { display: flex; gap: 8px; margin-top: 10px; }
         button.edit-btn { background-color: var(--warning); padding: 8px; font-size: 14px; color: #000; margin: 0; flex: 1; border-radius: 6px; }
         button.delete-btn { background-color: #EF4444; padding: 8px; font-size: 14px; color: #FFF; margin: 0; flex: 1; border-radius: 6px; }
         
-        /* 🩺 شكل بطاقة المراجع الأصلية (بنلات مدورة الحواف تماماً كما طلبت بدون تغيير) */
         .booking-card {
             background: #0F172A; border-right: 4px solid var(--primary);
             padding: 15px; border-radius: 8px; margin-bottom: 12px;
@@ -160,8 +158,9 @@
         <label>رقم الهاتف (اختياري):</label>
         <input type="tel" id="resPhone" placeholder="077... (اختياري)">
         
-        <label>حالة المريض (اختياري):</label>
-        <input type="text" id="resStatus" placeholder="مثال: رفع خيط، استشارة...">
+        <!-- حقل الملاحظات الجديد في الموبايل -->
+        <label>ملاحظات الحجز (اختياري):</label>
+        <input type="text" id="resNotes" placeholder="مثال: استشارة، رفع خيط، فحص جديد...">
         
         <button onclick="saveBooking()" id="btnSave">حفظ الحجز في السحابة</button>
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
@@ -181,8 +180,7 @@
             <input type="date" id="secReviewDateFilter" onchange="loadReviewBookings()">
         </div>
 
-        <!-- 🔍 شريط البحث وفلتر الوقت للسكرتير -->
-        <input type="text" id="secSearchInput" placeholder="🔍 ابحث بالاسم، التسلسل، الهاتف، أو الحالة..." oninput="filterSecretaryBookings()">
+        <input type="text" id="secSearchInput" placeholder="🔍 ابحث بالاسم، التسلسل، الهاتف، أو الملاحظات..." oninput="filterSecretaryBookings()">
         <select id="secTimeFilter" onchange="filterSecretaryBookings()">
             <option value="">جميع الأوقات</option>
         </select>
@@ -205,8 +203,7 @@
             <input type="date" id="doctorDateFilter" onchange="loadDoctorDashboard()">
         </div>
 
-        <!-- 🔍 شريط البحث وفلتر الوقت للطبيب -->
-        <input type="text" id="docSearchInput" placeholder="🔍 ابحث بالاسم، التسلسل، الهاتف، أو الحالة..." oninput="filterDoctorBookings()">
+        <input type="text" id="docSearchInput" placeholder="🔍 ابحث بالاسم، التسلسل، الهاتف، أو الملاحظات..." oninput="filterDoctorBookings()">
         <select id="docTimeFilter" onchange="filterDoctorBookings()">
             <option value="">جميع الأوقات</option>
         </select>
@@ -228,14 +225,17 @@
         <input type="hidden" id="editDocId">
         <label>اسم المريض:</label>
         <input type="text" id="editName">
-        <label>رقم الهاتف (اختياري):</label>
+        <label>رقم الهاتف:</label>
         <input type="tel" id="editPhone">
         <label>التسلسل:</label>
         <input type="number" id="editSeq">
         <label>الوقت:</label>
         <input type="time" id="editTime">
-        <label>الحالة (اختياري):</label>
-        <input type="text" id="editStatus">
+        
+        <!-- حقل الملاحظات في نافذة التعديل -->
+        <label>ملاحظات الحجز:</label>
+        <input type="text" id="editNotes" placeholder="استشارة، رفع خيط...">
+
         <button onclick="saveEdit()" style="background-color: var(--warning); color: #000;">حفظ التعديلات</button>
         <button class="close-btn" onclick="closeEditModal()">إلغاء</button>
     </div>
@@ -253,7 +253,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // 💡 جلب كود العيادة الحي من ذاكرة المتصفح أو افتراضي
     let CLINIC_CODE = localStorage.getItem('clinicCode') || "MyClinic_1";
     let loggedInDoctorId = 0;
 
@@ -308,10 +307,8 @@
                     }
                 }
                 if (foundUser) {
-                    // حفظ كود العيادة وبيانات المستخدم في ذاكرة المتصفح
                     localStorage.setItem('clinicCode', clinicCodeInput);
                     CLINIC_CODE = clinicCodeInput;
-
                     localStorage.setItem('userRole', foundUser.Role);
                     localStorage.setItem('userFullName', foundUser.FullName);
                     localStorage.setItem('doctorId', foundUser.DoctorID);
@@ -345,7 +342,6 @@
         loggedInDoctorId = localStorage.getItem('doctorId');
         CLINIC_CODE = localStorage.getItem('clinicCode') || "MyClinic_1";
 
-        // ملء خانة رمز العيادة تلقائياً إذا كان محفوظاً
         if (localStorage.getItem('clinicCode')) {
             const codeField = document.getElementById('loginClinicCode');
             if (codeField) codeField.value = localStorage.getItem('clinicCode');
@@ -392,7 +388,7 @@
 
         const GEMINI_API_KEY = "ضع_مفتاح_جيميناي_الخاص_بك_هنا";
         const todayStr = new Date().toISOString().split('T')[0];
-        const prompt = `أنت مساعد طبي. تاريخ اليوم: ${todayStr}. استخرج بيانات الحجز JSON فقط بدون ماركداون: name, phone, date, time, status, sequence. النص: "${aiText}"`;
+        const prompt = `أنت مساعد طبي. تاريخ اليوم: ${todayStr}. استخرج بيانات الحجز JSON فقط بدون ماركداون: name, phone, date, time, notes, sequence. النص: "${aiText}"`;
 
         try {
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
@@ -405,7 +401,7 @@
             if(parsed.phone) document.getElementById('resPhone').value = parsed.phone;
             if(parsed.date) document.getElementById('resDate').value = parsed.date;
             if(parsed.time) document.getElementById('resTime').value = parsed.time;
-            if(parsed.status) document.getElementById('resStatus').value = parsed.status;
+            if(parsed.notes) document.getElementById('resNotes').value = parsed.notes;
             if(parsed.sequence) document.getElementById('resSeq').value = parsed.sequence;
             document.getElementById('aiInput').value = '';
             alert("✨ تم تحليل النص وتعبئته بنجاح!");
@@ -426,6 +422,7 @@
         document.getElementById(screenId).classList.remove('hidden');
     }
 
+    // حفظ الحجز مع إرسال الملاحظات وحالة "قيد الانتظار" الافتراضية
     window.saveBooking = async function() {
         const docId = document.getElementById('secretaryDoctorSelect').value;
         const rDate = document.getElementById('resDate').value;
@@ -433,7 +430,7 @@
         const rTime = document.getElementById('resTime').value;
         const rName = document.getElementById('resName').value;
         const rPhone = document.getElementById('resPhone').value; 
-        const rStatus = document.getElementById('resStatus').value;
+        const rNotes = document.getElementById('resNotes').value;
 
         if(!docId) { alert("يرجى اختيار الطبيب المعالج!"); return; }
         if(!rDate || !rSeq || !rTime || !rName) { alert("يرجى تعبئة الحقول الأساسية!"); return; }
@@ -450,13 +447,21 @@
             }
             if (!conflict) {
                 await push(refPath, {
-                    doctorID: parseInt(docId), sequence: parseInt(rSeq), time: rTime,
-                    patientName: rName, phone: rPhone || "", patientStatus: rStatus || "",
-                    syncState: "Pending", timestamp: new Date().getTime()
+                    doctorID: parseInt(docId), 
+                    sequence: parseInt(rSeq), 
+                    time: rTime,
+                    patientName: rName, 
+                    phone: rPhone || "", 
+                    patientStatus: "قيد الانتظار", // تثبيت الحالة قيد الانتظار
+                    patientNotes: rNotes || "", // إرسال الملاحظات
+                    syncState: "Pending", 
+                    timestamp: new Date().getTime()
                 });
                 alert("✅ تم حفظ الحجز بنجاح!");
-                document.getElementById('resName').value = ''; document.getElementById('resPhone').value = '';
-                document.getElementById('resStatus').value = ''; document.getElementById('resSeq').value = parseInt(rSeq) + 1;
+                document.getElementById('resName').value = ''; 
+                document.getElementById('resPhone').value = '';
+                document.getElementById('resNotes').value = ''; 
+                document.getElementById('resSeq').value = parseInt(rSeq) + 1;
             }
         } catch(e) { alert("خطأ: " + e.message); }
     }
@@ -517,8 +522,8 @@
             const nameMatch = b.patientName && b.patientName.toLowerCase().includes(query);
             const phoneMatch = b.phone && b.phone.toLowerCase().includes(query);
             const seqMatch = b.sequence && b.sequence.toString().includes(query);
-            const statusMatch = b.patientStatus && b.patientStatus.toLowerCase().includes(query);
-            const queryMatch = !query || nameMatch || phoneMatch || seqMatch || statusMatch;
+            const notesMatch = b.patientNotes && b.patientNotes.toLowerCase().includes(query);
+            const queryMatch = !query || nameMatch || phoneMatch || seqMatch || notesMatch;
 
             const timeMatch = !selectedTime || b.time === selectedTime;
 
@@ -530,9 +535,9 @@
 
         if(filtered.length > 0) {
             filtered.forEach(b => {
-                const statusText = b.patientStatus ? `<div class="status-badge">📌 ${b.patientStatus}</div>` : '';
+                const notesText = b.patientNotes ? `<div class="status-badge">📌 ملاحظات: ${b.patientNotes}</div>` : '';
                 const phoneText = b.phone ? `<div>📱 الهاتف: ${b.phone}</div>` : '';
-                const editParams = `'${b.key}', '${docId}', '${date}', '${b.patientName.replace(/'/g,"\\'")}', '${b.phone || ""}', '${b.sequence}', '${b.time}', '${b.patientStatus ? b.patientStatus.replace(/'/g,"\\'") : ""}'`;
+                const editParams = `'${b.key}', '${docId}', '${date}', '${b.patientName.replace(/'/g,"\\'")}', '${b.phone || ""}', '${b.sequence}', '${b.time}', '${b.patientNotes ? b.patientNotes.replace(/'/g,"\\'") : ""}'`;
                 
                 listDiv.innerHTML += `
                 <div class="booking-card" style="border-right-color: #10B981;">
@@ -540,7 +545,7 @@
                     <div>👤 المريض: ${b.patientName}</div>
                     <div>🕒 الوقت: ${b.time}</div>
                     ${phoneText}
-                    ${statusText}
+                    ${notesText}
                     <div class="action-buttons">
                         <button class="edit-btn" onclick="openEditModal(${editParams})">✏️ تعديل</button>
                         <button class="delete-btn" onclick="deleteBooking('${docId}', '${date}', '${b.key}', '${b.patientName.replace(/'/g,"\\'")}')">🗑️ حذف</button>
@@ -563,7 +568,7 @@
         }
     }
 
-    window.openEditModal = function(key, docId, date, name, phone, seq, time, status) {
+    window.openEditModal = function(key, docId, date, name, phone, seq, time, notes) {
         document.getElementById('editKey').value = key; 
         document.getElementById('editDocId').value = docId; 
         document.getElementById('editDate').value = date; 
@@ -571,7 +576,7 @@
         document.getElementById('editPhone').value = phone;
         document.getElementById('editSeq').value = seq; 
         document.getElementById('editTime').value = time;
-        document.getElementById('editStatus').value = status; 
+        document.getElementById('editNotes').value = notes; 
         document.getElementById('editModal').classList.remove('hidden');
     }
 
@@ -588,7 +593,8 @@
             phone: document.getElementById('editPhone').value || "", 
             sequence: parseInt(document.getElementById('editSeq').value), 
             time: document.getElementById('editTime').value,
-            patientStatus: document.getElementById('editStatus').value, 
+            patientNotes: document.getElementById('editNotes').value, 
+            patientStatus: "قيد الانتظار",
             syncState: "Pending"
         };
         try {
@@ -635,8 +641,8 @@
             const nameMatch = b.patientName && b.patientName.toLowerCase().includes(query);
             const phoneMatch = b.phone && b.phone.toLowerCase().includes(query);
             const seqMatch = b.sequence && b.sequence.toString().includes(query);
-            const statusMatch = b.patientStatus && b.patientStatus.toLowerCase().includes(query);
-            const queryMatch = !query || nameMatch || phoneMatch || seqMatch || statusMatch;
+            const notesMatch = b.patientNotes && b.patientNotes.toLowerCase().includes(query);
+            const queryMatch = !query || nameMatch || phoneMatch || seqMatch || notesMatch;
 
             const timeMatch = !selectedTime || b.time === selectedTime;
 
@@ -648,7 +654,7 @@
 
         if(filtered.length > 0) {
             filtered.forEach(b => {
-                const statusHtml = b.patientStatus ? `<div class="status-badge">📌 ملاحظة: ${b.patientStatus}</div>` : '';
+                const notesHtml = b.patientNotes ? `<div class="status-badge">📌 ملاحظات: ${b.patientNotes}</div>` : '';
                 const phoneHtml = b.phone ? `<div>📱 الهاتف: ${b.phone}</div>` : ''; 
                 listDiv.innerHTML += `
                 <div class="booking-card">
@@ -656,7 +662,7 @@
                     <div>👤 المريض: ${b.patientName}</div>
                     <div>🕒 الوقت: ${b.time}</div>
                     ${phoneHtml}
-                    ${statusHtml}
+                    ${notesHtml}
                 </div>`;
             });
         } else {
