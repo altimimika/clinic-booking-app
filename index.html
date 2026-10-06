@@ -158,7 +158,6 @@
         <label>رقم الهاتف (اختياري):</label>
         <input type="tel" id="resPhone" placeholder="077... (اختياري)">
         
-        <!-- حقل الملاحظات الجديد في الموبايل -->
         <label>ملاحظات الحجز (اختياري):</label>
         <input type="text" id="resNotes" placeholder="مثال: استشارة، رفع خيط، فحص جديد...">
         
@@ -232,7 +231,6 @@
         <label>الوقت:</label>
         <input type="time" id="editTime">
         
-        <!-- حقل الملاحظات في نافذة التعديل -->
         <label>ملاحظات الحجز:</label>
         <input type="text" id="editNotes" placeholder="استشارة، رفع خيط...">
 
@@ -253,7 +251,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    let CLINIC_CODE = localStorage.getItem('clinicCode') || "MyClinic_1";
+    let CLINIC_CODE = localStorage.getItem('clinicCode') || "";
     let loggedInDoctorId = 0;
 
     let secretaryAllBookings = [];
@@ -307,8 +305,10 @@
                     }
                 }
                 if (foundUser) {
+                    // 👈 حفظ رمز العيادة وبيانات الدخول بشكل دائم في ذاكرة المتصفح
                     localStorage.setItem('clinicCode', clinicCodeInput);
                     CLINIC_CODE = clinicCodeInput;
+
                     localStorage.setItem('userRole', foundUser.Role);
                     localStorage.setItem('userFullName', foundUser.FullName);
                     localStorage.setItem('doctorId', foundUser.DoctorID);
@@ -340,11 +340,12 @@
         const role = localStorage.getItem('userRole');
         const fullName = localStorage.getItem('userFullName');
         loggedInDoctorId = localStorage.getItem('doctorId');
-        CLINIC_CODE = localStorage.getItem('clinicCode') || "MyClinic_1";
+        CLINIC_CODE = localStorage.getItem('clinicCode') || "";
 
-        if (localStorage.getItem('clinicCode')) {
+        // 👈 استرجاع رمز العيادة تلقائياً في خانة الإدخال إذا كان محفوظاً
+        if (CLINIC_CODE) {
             const codeField = document.getElementById('loginClinicCode');
-            if (codeField) codeField.value = localStorage.getItem('clinicCode');
+            if (codeField) codeField.value = CLINIC_CODE;
         }
 
         if(role === 'الطبيب') { 
@@ -360,8 +361,11 @@
     }
 
     window.logout = function() {
-        localStorage.clear();
-        document.getElementById('loginClinicCode').value = '';
+        // الحفاظ على رمز العيادة محفوظاً حتى عند تسجيل الخروج لتسهيل الدخول لاحقاً، أو مسحه إذا أردت (قمنا بالإبقاء عليه لتجربة أسرع)
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userFullName');
+        localStorage.removeItem('doctorId');
+        
         document.getElementById('loginUsername').value = '';
         document.getElementById('loginPassword').value = '';
         showScreen('loginScreen');
@@ -422,7 +426,6 @@
         document.getElementById(screenId).classList.remove('hidden');
     }
 
-    // حفظ الحجز مع إرسال الملاحظات وحالة "قيد الانتظار" الافتراضية
     window.saveBooking = async function() {
         const docId = document.getElementById('secretaryDoctorSelect').value;
         const rDate = document.getElementById('resDate').value;
@@ -452,8 +455,8 @@
                     time: rTime,
                     patientName: rName, 
                     phone: rPhone || "", 
-                    patientStatus: "قيد الانتظار", // تثبيت الحالة قيد الانتظار
-                    patientNotes: rNotes || "", // إرسال الملاحظات
+                    patientStatus: "قيد الانتظار", 
+                    patientNotes: rNotes || "", 
                     syncState: "Pending", 
                     timestamp: new Date().getTime()
                 });
@@ -523,7 +526,8 @@
             const phoneMatch = b.phone && b.phone.toLowerCase().includes(query);
             const seqMatch = b.sequence && b.sequence.toString().includes(query);
             const notesMatch = b.patientNotes && b.patientNotes.toLowerCase().includes(query);
-            const queryMatch = !query || nameMatch || phoneMatch || seqMatch || notesMatch;
+            const statusMatch = b.patientStatus && b.patientStatus.toLowerCase().includes(query);
+            const queryMatch = !query || nameMatch || phoneMatch || seqMatch || notesMatch || statusMatch;
 
             const timeMatch = !selectedTime || b.time === selectedTime;
 
@@ -535,36 +539,40 @@
 
         if(filtered.length > 0) {
             filtered.forEach(b => {
-                // 🎨 تحديد لون شارة الحالة حسب القيمة القادمة من الحاسبة
-                let statusBg = "#334155"; // اللون الافتراضي (قيد الانتظار أو رمادي)
+                let statusBg = "#334155"; 
                 let statusText = b.patientStatus || "قيد الانتظار";
 
                 if (statusText === "حاضر") {
-                    statusBg = "#10B981"; // أخضر أنيق
+                    statusBg = "#10B981"; 
                 } else if (statusText === "لم يحضر") {
-                    statusBg = "#F59E0B"; // برتقالي
+                    statusBg = "#F59E0B"; 
                 } else if (statusText === "تم الالغاء") {
-                    statusBg = "#EF4444"; // أحمر
+                    statusBg = "#EF4444"; 
                 }
 
                 const statusHtml = `<div class="status-badge" style="background-color: ${statusBg}; color: white; font-weight: bold; margin-bottom: 6px;">📌 الحالة: ${statusText}</div>`;
-                const notesHtml = b.patientNotes ? `<div style="font-size: 13px; color: var(--text-muted);">💬 ملاحظات: ${b.patientNotes}</div>` : '';
-                const phoneHtml = b.phone ? `<div>📱 الهاتف: ${b.phone}</div>` : ''; 
-
+                const notesHtml = b.patientNotes ? `<div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">💬 ملاحظات: ${b.patientNotes}</div>` : '';
+                const phoneText = b.phone ? `<div>📱 الهاتف: ${b.phone}</div>` : ''; 
+                const editParams = `'${b.key}', '${docId}', '${date}', '${b.patientName.replace(/'/g,"\\'")}', '${b.phone || ""}', '${b.sequence}', '${b.time}', '${b.patientNotes ? b.patientNotes.replace(/'/g,"\\'") : ""}'`;
+                
                 listDiv.innerHTML += `
                 <div class="booking-card" style="border-right-color: ${statusBg};">
                     <div class="seq">تسلسل: ${b.sequence}</div>
                     <div>👤 المريض: ${b.patientName}</div>
                     <div>🕒 الوقت: ${b.time}</div>
-                    ${phoneHtml}
+                    ${phoneText}
                     ${statusHtml}
                     ${notesHtml}
+                    <div class="action-buttons">
+                        <button class="edit-btn" onclick="openEditModal(${editParams})">✏️ تعديل</button>
+                        <button class="delete-btn" onclick="deleteBooking('${docId}', '${date}', '${b.key}', '${b.patientName.replace(/'/g,"\\'")}')">🗑️ حذف</button>
+                    </div>
                 </div>`;
             });
         } else {
             listDiv.innerHTML = `<div style="text-align:center; color:#94A3B8; padding:20px;">لا توجد نتائج مطابقة للبحث.</div>`;
         }
-}
+    }
         
     window.deleteBooking = async function(docId, date, key, patientName) {
         if (confirm(`🗑️ هل أنت متأكد من حذف حجز المريض (${patientName}) نهائياً؟`)) {
@@ -651,7 +659,8 @@
             const phoneMatch = b.phone && b.phone.toLowerCase().includes(query);
             const seqMatch = b.sequence && b.sequence.toString().includes(query);
             const notesMatch = b.patientNotes && b.patientNotes.toLowerCase().includes(query);
-            const queryMatch = !query || nameMatch || phoneMatch || seqMatch || notesMatch;
+            const statusMatch = b.patientStatus && b.patientStatus.toLowerCase().includes(query);
+            const queryMatch = !query || nameMatch || phoneMatch || seqMatch || notesMatch || statusMatch;
 
             const timeMatch = !selectedTime || b.time === selectedTime;
 
@@ -663,14 +672,28 @@
 
         if(filtered.length > 0) {
             filtered.forEach(b => {
-                const notesHtml = b.patientNotes ? `<div class="status-badge">📌 ملاحظات: ${b.patientNotes}</div>` : '';
+                let statusBg = "#334155"; 
+                let statusText = b.patientStatus || "قيد الانتظار";
+
+                if (statusText === "حاضر") {
+                    statusBg = "#10B981"; 
+                } else if (statusText === "لم يحضر") {
+                    statusBg = "#F59E0B"; 
+                } else if (statusText === "تم الالغاء") {
+                    statusBg = "#EF4444"; 
+                }
+
+                const statusHtml = `<div class="status-badge" style="background-color: ${statusBg}; color: white; font-weight: bold; margin-bottom: 6px;">📌 الحالة: ${statusText}</div>`;
+                const notesHtml = b.patientNotes ? `<div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">💬 ملاحظات: ${b.patientNotes}</div>` : '';
                 const phoneHtml = b.phone ? `<div>📱 الهاتف: ${b.phone}</div>` : ''; 
+
                 listDiv.innerHTML += `
-                <div class="booking-card">
+                <div class="booking-card" style="border-right-color: ${statusBg};">
                     <div class="seq">تسلسل: ${b.sequence}</div>
                     <div>👤 المريض: ${b.patientName}</div>
                     <div>🕒 الوقت: ${b.time}</div>
                     ${phoneHtml}
+                    ${statusHtml}
                     ${notesHtml}
                 </div>`;
             });
