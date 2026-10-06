@@ -8,7 +8,7 @@
     <style>
         :root {
             --primary: #2196F3; --bg-color: #0F172A; --card-bg: #1E293B;
-            --text-main: #F8FAFC; --text-muted: #94A3B8; --warning: #F59E0B; --ai-color: #8B5CF6; --success: #10B981;
+            --text-main: #F8FAFC; --text-muted: #94A3B8; --warning: #F59E0B; --ai-color: #8B5CF6; --success: #10B981; --danger: #EF4444;
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -62,9 +62,16 @@
             background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3);
         }
 
-        .action-buttons { display: flex; gap: 8px; margin-top: 10px; }
-        button.edit-btn { background-color: var(--warning); padding: 8px; font-size: 14px; color: #000; margin: 0; flex: 1; border-radius: 6px; }
-        button.delete-btn { background-color: #EF4444; padding: 8px; font-size: 14px; color: #FFF; margin: 0; flex: 1; border-radius: 6px; }
+        /* أزرار الإجراءات الثلاثة للمريض في قائمة السكرتير */
+        .patient-actions {
+            display: flex; gap: 8px; margin-top: 12px; border-top: 1px solid #334155; padding-top: 10px;
+        }
+        .action-icon-btn {
+            flex: 1; padding: 8px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; color: white; margin: 0;
+        }
+        .btn-call { background-color: var(--success); }
+        .btn-edit { background-color: var(--warning); color: #000; }
+        .btn-delete { background-color: var(--danger); }
         
         .booking-card {
             background: #0F172A; border-right: 4px solid var(--primary);
@@ -124,7 +131,7 @@
     <div id="secretaryScreen" class="card hidden">
         <div id="welcomeSec" style="color: var(--success); font-weight: bold; margin-bottom: 15px; text-align: center;"></div>
         
-        <button onclick="showScreen('secretaryReviewScreen')" style="background-color: var(--success);">📅 سجل الحجوزات (مراجعة وتعديل)</button>
+        <button onclick="showScreen('secretaryReviewScreen'); loadReviewBookings();" style="background-color: var(--success);">📅 سجل الحجوزات (مراجعة وتعديل)</button>
         <hr style="border-color: #334155; margin: 20px 0;">
 
         <label>اختر الطبيب المعالج:</label>
@@ -132,7 +139,9 @@
             <option value="">جاري تحميل الأطباء...</option>
         </select>
 
-        <h2>إدخال الحجز</h2>
+        <h2 id="formTitle">إدخال الحجز</h2>
+        <input type="hidden" id="editBookingKey" value=""> <!-- لتخزين مفتاح التعديل إن وجد -->
+
         <label>تاريخ الحجز:</label>
         <input type="date" id="resDate" required>
         
@@ -152,6 +161,7 @@
         <input type="text" id="resNotes" placeholder="مثال: استشارة، رفع خيط...">
         
         <button onclick="saveBooking()" id="btnSave">حفظ الحجز في السحابة</button>
+        <button id="btnCancelEdit" class="hidden" onclick="cancelEditMode()" style="background-color: #64748B;">إلغاء التعديل</button>
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
     </div>
 
@@ -169,7 +179,7 @@
         <input type="text" id="secSearchInput" placeholder="🔍 ابحث بالاسم، التسلسل..." oninput="filterSecretaryBookings()">
         <div id="secretaryCounter" class="records-counter">📊 إجمالي الحجوزات: 0</div>
         <div id="reviewBookingsList"></div>
-        <button onclick="showScreen('secretaryScreen')" style="background-color: var(--primary); margin-top: 20px;">➕ العودة</button>
+        <button onclick="showScreen('secretaryScreen')" style="background-color: var(--primary); margin-top: 20px;">➕ العودة لشاشة الحجز</button>
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
     </div>
 
@@ -209,7 +219,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-    import { getDatabase, ref, push, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
+    import { getDatabase, ref, push, set, update, get, remove, onValue } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
 
     const firebaseConfig = {
       databaseURL: "https://myclinicsystem-f978f-default-rtdb.firebaseio.com/", 
@@ -221,7 +231,6 @@
 
     let CLINIC_CODE = localStorage.getItem('clinicCode') || "";
     let doctorAllBookings = [];
-    let doctorQueueBookings = [];
 
     window.login = async function() {
         const clinicCodeInput = document.getElementById('loginClinicCode').value.trim();
@@ -321,7 +330,6 @@
         document.getElementById(screenId).classList.remove('hidden');
     }
 
-    // 💡 التحكم بتبويبات شاشة الطبيب
     window.switchDoctorTab = function(tabName) {
         const bookingsTab = document.getElementById('doctorBookingsTabContent');
         const queueTab = document.getElementById('doctorQueueTabContent');
@@ -338,7 +346,7 @@
             queueTab.classList.remove('hidden');
             bookingsBtn.classList.remove('active');
             queueBtn.classList.add('active');
-            loadDoctorQueue(); // جلب بيانات الطابور الفعلي من السي شارب
+            loadDoctorQueue();
         }
     }
 
@@ -350,7 +358,6 @@
         checkAutoLogin();
     }
 
-    // جلب حجوزات الطبيب العادية
     window.loadDoctorDashboard = function() {
         const selectedDate = document.getElementById('doctorDateFilter').value;
         const docId = localStorage.getItem('doctorId');
@@ -399,7 +406,6 @@
         });
     }
 
-    // 🩺 جلب بيانات طابور العيادة الحالي المحدثة من السي شارب فقط (عرض فقط)
     window.loadDoctorQueue = function() {
         const docId = localStorage.getItem('doctorId');
         if(!docId) return;
@@ -436,7 +442,7 @@
         });
     }
 
-    // وظائف السكرتير لإضافة الحجوزات والمراجعة
+    // 📌 حفظ أو تعديل حجز من قبل السكرتير
     window.saveBooking = async function() {
         const docId = document.getElementById('secretaryDoctorSelect').value;
         const date = document.getElementById('resDate').value;
@@ -445,6 +451,7 @@
         const name = document.getElementById('resName').value.trim();
         const phone = document.getElementById('resPhone').value.trim();
         const notes = document.getElementById('resNotes').value.trim();
+        const editKey = document.getElementById('editBookingKey').value;
 
         if(!docId || !date || !seq || !time || !name) {
             alert("يرجى ملء الحقول الإجبارية واختيار الطبيب!");
@@ -462,14 +469,22 @@
                 timestamp: Date.now()
             };
 
-            await push(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}`), bookingData);
-            alert("✅ تم حفظ الحجز بنجاح!");
-            document.getElementById('resName').value = '';
-            document.getElementById('resPhone').value = '';
-            document.getElementById('resNotes').value = '';
-            document.getElementById('resSeq').value = parseInt(seq) + 1;
+            if (editKey) {
+                // تحديث حجز موجود
+                await update(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}/${editKey}`), bookingData);
+                alert("✅ تم تحديث الحجز بنجاح!");
+                cancelEditMode();
+            } else {
+                // إضافة حجز جديد
+                await push(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}`), bookingData);
+                alert("✅ تم حفظ الحجز بنجاح!");
+                document.getElementById('resName').value = '';
+                document.getElementById('resPhone').value = '';
+                document.getElementById('resNotes').value = '';
+                document.getElementById('resSeq').value = parseInt(seq) + 1;
+            }
         } catch (e) {
-            alert("خطأ أثناء حفظ الحجز: " + e.message);
+            alert("خطأ أثناء الحفظ: " + e.message);
         }
     }
 
@@ -503,12 +518,70 @@
         listDiv.innerHTML = '';
 
         filtered.forEach(b => {
+            let phoneBtnHtml = b.patientPhone ? `<button class="action-icon-btn btn-call" onclick="callPatient('${b.patientPhone}')">📞 اتصال</button>` : '';
+            
             listDiv.innerHTML += `
             <div class="booking-card">
                 <div class="seq">تسلسل: ${b.sequence} - ${b.patientName}</div>
-                <div>🕒 الوقت: ${b.time} | الحالة: ${b.patientStatus || 'قيد الانتظار'}</div>
+                <div>🕒 الوقت: ${b.time} | 📱 الهاتف: ${b.patientPhone || 'لا يوجد'}</div>
+                <div class="status-badge" style="background-color: #334155; color: white;">📌 الحالة: ${b.patientStatus || 'قيد الانتظار'}</div>
+                ${b.patientNotes ? `<div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">💬 ملاحظات: ${b.patientNotes}</div>` : ''}
+                
+                <!-- الأزرار الثلاثة (اتصال، تعديل، حذف) -->
+                <div class="patient-actions">
+                    ${phoneBtnHtml}
+                    <button class="action-icon-btn btn-edit" onclick="editBooking('${b.id}', '${b.sequence}', '${b.time}', '${b.patientName}', '${b.patientPhone || ''}', '${b.patientNotes || ''}')">✏️ تعديل</button>
+                    <button class="action-icon-btn btn-delete" onclick="deleteBooking('${b.id}')">🗑️ حذف</button>
+                </div>
             </div>`;
         });
+    }
+
+    // وظيفة الاتصال المباشر بالمريض عبر الموبايل
+    window.callPatient = function(phone) {
+        window.location.href = `tel:${phone}`;
+    }
+
+    // تفعيل وضع التعديل للسكرتير
+    window.editBooking = function(id, seq, time, name, phone, notes) {
+        document.getElementById('editBookingKey').value = id;
+        document.getElementById('resSeq').value = seq;
+        document.getElementById('resTime').value = time;
+        document.getElementById('resName').value = name;
+        document.getElementById('resPhone').value = phone;
+        document.getElementById('resNotes').value = notes;
+        
+        document.getElementById('formTitle').innerText = "تعديل بيانات الحجز";
+        document.getElementById('btnSave').innerText = "حفظ التعديلات";
+        document.getElementById('btnCancelEdit').classList.remove('hidden');
+
+        showScreen('secretaryScreen');
+    }
+
+    // إلغاء وضع التعديل والعودة للإضافة العادية
+    window.cancelEditMode = function() {
+        document.getElementById('editBookingKey').value = "";
+        document.getElementById('resName').value = '';
+        document.getElementById('resPhone').value = '';
+        document.getElementById('resNotes').value = '';
+        document.getElementById('formTitle').innerText = "إدخال الحجز";
+        document.getElementById('btnSave').innerText = "حفظ الحجز في السحابة";
+        document.getElementById('btnCancelEdit').classList.add('hidden');
+    }
+
+    // حذف الحجز من السحابة
+    window.deleteBooking = async function(bookingId) {
+        if (!confirm("هل أنت متأكد من حذف هذا الحجز؟")) return;
+
+        const docId = document.getElementById('reviewDoctorSelect').value;
+        const date = document.getElementById('secReviewDateFilter').value;
+
+        try {
+            await remove(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}/${bookingId}`));
+            alert("🗑️ تم حذف الحجز بنجاح!");
+        } catch (e) {
+            alert("خطأ أثناء الحذف: " + e.message);
+        }
     }
 </script>
 </body>
