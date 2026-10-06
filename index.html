@@ -535,28 +535,37 @@
 
         if(filtered.length > 0) {
             filtered.forEach(b => {
-                const notesText = b.patientNotes ? `<div class="status-badge">📌 ملاحظات: ${b.patientNotes}</div>` : '';
-                const phoneText = b.phone ? `<div>📱 الهاتف: ${b.phone}</div>` : '';
-                const editParams = `'${b.key}', '${docId}', '${date}', '${b.patientName.replace(/'/g,"\\'")}', '${b.phone || ""}', '${b.sequence}', '${b.time}', '${b.patientNotes ? b.patientNotes.replace(/'/g,"\\'") : ""}'`;
-                
+                // 🎨 تحديد لون شارة الحالة حسب القيمة القادمة من الحاسبة
+                let statusBg = "#334155"; // اللون الافتراضي (قيد الانتظار أو رمادي)
+                let statusText = b.patientStatus || "قيد الانتظار";
+
+                if (statusText === "حاضر") {
+                    statusBg = "#10B981"; // أخضر أنيق
+                } else if (statusText === "لم يحضر") {
+                    statusBg = "#F59E0B"; // برتقالي
+                } else if (statusText === "تم الالغاء") {
+                    statusBg = "#EF4444"; // أحمر
+                }
+
+                const statusHtml = `<div class="status-badge" style="background-color: ${statusBg}; color: white; font-weight: bold; margin-bottom: 6px;">📌 الحالة: ${statusText}</div>`;
+                const notesHtml = b.patientNotes ? `<div style="font-size: 13px; color: var(--text-muted);">💬 ملاحظات: ${b.patientNotes}</div>` : '';
+                const phoneHtml = b.phone ? `<div>📱 الهاتف: ${b.phone}</div>` : ''; 
+
                 listDiv.innerHTML += `
-                <div class="booking-card" style="border-right-color: #10B981;">
+                <div class="booking-card" style="border-right-color: ${statusBg};">
                     <div class="seq">تسلسل: ${b.sequence}</div>
                     <div>👤 المريض: ${b.patientName}</div>
                     <div>🕒 الوقت: ${b.time}</div>
-                    ${phoneText}
-                    ${notesText}
-                    <div class="action-buttons">
-                        <button class="edit-btn" onclick="openEditModal(${editParams})">✏️ تعديل</button>
-                        <button class="delete-btn" onclick="deleteBooking('${docId}', '${date}', '${b.key}', '${b.patientName.replace(/'/g,"\\'")}')">🗑️ حذف</button>
-                    </div>
+                    ${phoneHtml}
+                    ${statusHtml}
+                    ${notesHtml}
                 </div>`;
             });
         } else {
             listDiv.innerHTML = `<div style="text-align:center; color:#94A3B8; padding:20px;">لا توجد نتائج مطابقة للبحث.</div>`;
         }
-    }
-
+}
+        
     window.deleteBooking = async function(docId, date, key, patientName) {
         if (confirm(`🗑️ هل أنت متأكد من حذف حجز المريض (${patientName}) نهائياً؟`)) {
             try {
