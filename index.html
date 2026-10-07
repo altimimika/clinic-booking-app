@@ -85,11 +85,13 @@
             color: var(--success); font-size: 15px;
         }
 
-        .total-box {
-            background: linear-gradient(145deg, #1e293b, #0f172a);
-            border: 1px solid var(--success); padding: 15px; border-radius: 12px;
-            margin-top: 20px; text-align: center; font-size: 18px; font-weight: bold; color: var(--success);
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+        /* تنسيق صندوق الإحصائيات العلوي في طابور العيادة */
+        .queue-stats-header {
+            display: flex; gap: 10px; margin-bottom: 15px;
+        }
+        .queue-stat-box {
+            flex: 1; background: #1e293b; border: 1px solid #334155; padding: 12px;
+            border-radius: 8px; text-align: center; font-weight: bold; font-size: 14px; color: var(--success);
         }
 
         .hidden { display: none !important; }
@@ -144,7 +146,6 @@
         <label>تسلسل الحجز:</label>
         <input type="number" id="resSeq" placeholder="مثال: 1" required>
         
-        <!-- 💡 أداة اختيار الوقت البسيطة والخاصة بالموبايل -->
         <label>وقت الحجز:</label>
         <input type="time" id="resTime" required>
         
@@ -202,8 +203,12 @@
 
         <div id="doctorQueueTabContent" class="hidden">
             <h2>طابور العيادة الحالي</h2>
+            <!-- 💡 مجموع السجلات ومجموع المبالغ في الأعلى -->
+            <div class="queue-stats-header">
+                <div id="queueCountBox" class="queue-stat-box">السجلات: 0</div>
+                <div id="queueTotalBox" class="queue-stat-box">المبالغ: 0 د.ع</div>
+            </div>
             <div id="queueList"></div>
-            <div id="queueTotalBox" class="total-box">إجمالي المبالغ: 0 د.ع</div>
         </div>
 
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
@@ -227,12 +232,10 @@
     let doctorAllBookings = [];
     let clinicDoctorsList = {};
 
-    // 💡 دالة تحويل الوقت الذكية لتعرض بتنسيق 12 ساعة (ص/م) سواء أتى من الحاسبة أو أداة الوقت في الموبايل
     function formatTimeTo12Hour(timeStr) {
         if (!timeStr) return "---";
         let cleanTime = timeStr.trim();
         
-        // إذا كان الوقت قادماً من أداة الموبايل (مثلاً 14:30)
         if (/^\d{2}:\d{2}$/.test(cleanTime)) {
             let parts = cleanTime.split(':');
             let hours = parseInt(parts[0], 10);
@@ -243,7 +246,6 @@
             return `${hours}:${minutes} ${period}`;
         }
 
-        // إذا كان الوقت قادماً من الحاسبة أو بتنسيق نصي آخر
         let parts = cleanTime.split(' ');
         let timePart = parts[0]; 
         let periodPart = parts[1] || ''; 
@@ -390,7 +392,6 @@
         document.getElementById('resDate').value = today;
         checkAutoLogin();
         
-        // 💡 ضع كود تسجيل الـ Service Worker هنا
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
                 .then(() => console.log('Service Worker Registered Successfully'))
@@ -463,14 +464,18 @@
         onValue(ref(db, `ClinicQueue/${CLINIC_CODE}/${docId}`), (snapshot) => {
             const queueListDiv = document.getElementById('queueList');
             const totalBoxDiv = document.getElementById('queueTotalBox');
+            const countBoxDiv = document.getElementById('queueCountBox');
             queueListDiv.innerHTML = '';
             
             let totalAmount = 0;
+            let totalRecords = 0;
 
             if (snapshot.exists()) {
                 const data = snapshot.val();
                 let queueItems = [];
                 for(let k in data) queueItems.push(data[k]);
+                
+                totalRecords = queueItems.length;
 
                 queueItems.forEach(item => {
                     let price = parseFloat(item.payAmount) || 0;
@@ -488,7 +493,8 @@
                 queueListDiv.innerHTML = `<div style="text-align:center; color:#94A3B8; padding:20px;">لا يوجد مراجعين في الطابور حالياً.</div>`;
             }
 
-            totalBoxDiv.innerText = `إجمالي المبالغ: ${totalAmount.toLocaleString()} د.ع`;
+            countBoxDiv.innerText = `السجلات: ${totalRecords}`;
+            totalBoxDiv.innerText = `المبالغ: ${totalAmount.toLocaleString()} د.ع`;
         });
     }
 
@@ -497,7 +503,7 @@
         const date = document.getElementById('resDate').value;
         const seq = document.getElementById('resSeq').value;
         const rawTime = document.getElementById('resTime').value;
-        const time = formatTimeTo12Hour(rawTime); // تحويل وقت أداة الموبايل إلى صيغة 12 ساعة
+        const time = formatTimeTo12Hour(rawTime); 
         const name = document.getElementById('resName').value.trim();
         const phone = document.getElementById('resPhone').value.trim();
         const notes = document.getElementById('resNotes').value.trim();
@@ -603,7 +609,6 @@
             document.getElementById('secretaryDoctorSelect').value = docId;
         }
 
-        // محاولة تحويل الوقت المخزن ليتطابق مع أداة اختيار الوقت (HH:mm)
         let timeInputVal = "";
         if (time) {
             let match = time.match(/(\d+):(\d+)\s*(ص|م|AM|PM)?/i);
