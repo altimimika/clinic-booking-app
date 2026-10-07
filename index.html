@@ -145,7 +145,7 @@
         <input type="number" id="resSeq" placeholder="مثال: 1" required>
         
         <label>وقت الحجز:</label>
-        <input type="time" id="resTime" required>
+        <input type="text" id="resTime" placeholder="مثال: 04:30:00 م أو 4:30 ص" required>
         
         <label>اسم المريض:</label>
         <input type="text" id="resName" placeholder="الاسم الثلاثي" required>
@@ -224,18 +224,28 @@
 
     let CLINIC_CODE = localStorage.getItem('clinicCode') || "";
     let doctorAllBookings = [];
+    let clinicDoctorsList = {}; // الاحتفاظ بقائمة الأطباء لتحديد الطبيب تلقائياً
 
-    // دالة مساعدة لتحويل وقت 24 ساعة إلى صيغة 12 ساعة مع ص/م (متوافقة مع الحاسبة)
-    function formatTimeTo12Hour(time24) {
-        if (!time24) return "---";
-        let parts = time24.split(':');
-        if (parts.length < 2) return time24;
-        let hours = parseInt(parts[0], 10);
-        let minutes = parts[1];
-        let period = hours >= 12 ? 'م' : 'ص';
-        hours = hours % 12;
-        hours = hours ? hours : 12; // الرقم 0 يتحول إلى 12
-        return `${hours}:${minutes} ${period}`;
+    function formatTimeTo12Hour(timeStr) {
+        if (!timeStr) return "---";
+        let cleanTime = timeStr.trim();
+        let parts = cleanTime.split(' ');
+        let timePart = parts[0]; 
+        let periodPart = parts[1] || ''; 
+
+        let timeSegments = timePart.split(':');
+        if (timeSegments.length >= 2) {
+            let hours = parseInt(timeSegments[0], 10);
+            let minutes = timeSegments[1];
+            
+            if (!periodPart) {
+                periodPart = hours >= 12 ? 'م' : 'ص';
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+            }
+            return `${hours}:${minutes} ${periodPart}`;
+        }
+        return cleanTime;
     }
 
     window.login = async function() {
@@ -292,6 +302,7 @@
         try {
             const snapshot = await get(ref(db, `DoctorsConfig/${CLINIC_CODE}`));
             const users = snapshot.exists() ? snapshot.val() : null;
+            if (users) clinicDoctorsList = users;
 
             const userRoleLower = role.trim().toLowerCase();
             if(userRoleLower.includes('طبيب') || userRoleLower.includes('doctor')) { 
@@ -309,6 +320,7 @@
     }
 
     window.loadDoctorsListForSecretary = function(usersObj) {
+        clinicDoctorsList = usersObj; // حفظ القائمة
         const secSelect = document.getElementById('secretaryDoctorSelect');
         const reviewSelect = document.getElementById('reviewDoctorSelect');
         
@@ -403,7 +415,7 @@
 
             let phoneNum = b.patientPhone || b.phone || '';
             let phoneBtnHtml = phoneNum ? `<button class="action-icon-btn btn-call" onclick="callPatient('${phoneNum}')">📞 اتصال</button>` : '';
-            let formattedTime = formatTimeTo12Hour(b.time); // عرض الوقت بصيغة 12 ساعة
+            let formattedTime = formatTimeTo12Hour(b.time); 
 
             listDiv.innerHTML += `
             <div class="booking-card" style="border-right-color: ${statusBg};">
@@ -458,19 +470,17 @@
         });
     }
 
-    // حفظ أو تعديل حجز (تم تحويل الوقت بصيغة 12 ساعة قبل الإرسال)
     window.saveBooking = async function() {
         const docId = document.getElementById('secretaryDoctorSelect').value;
         const date = document.getElementById('resDate').value;
         const seq = document.getElementById('resSeq').value;
-        const rawTime = document.getElementById('resTime').value;
-        const time = formatTimeTo12Hour(rawTime); // تحويل الوقت إلى 12 ساعة (ص/م)
+        const timeVal = document.getElementById('resTime').value;
         const name = document.getElementById('resName').value.trim();
         const phone = document.getElementById('resPhone').value.trim();
         const notes = document.getElementById('resNotes').value.trim();
         const editKey = document.getElementById('editBookingKey').value;
 
-        if(!docId || !date || !seq || !rawTime || !name) {
+        if(!docId || !date || !seq || !timeVal || !name) {
             alert("يرجى ملء الحقول الإجبارية واختيار الطبيب!");
             return;
         }
@@ -478,7 +488,7 @@
         try {
             const bookingData = {
                 sequence: seq,
-                time: time,
+                time: timeVal, // حفظ الوقت كما هو (سواء مدخل يدوياً أو محول)
                 patientName: name,
                 phone: phone,          
                 patientPhone: phone,  
@@ -536,7 +546,8 @@
         filtered.forEach(b => {
             let phoneNum = b.patientPhone || b.phone || '';
             let phoneBtnHtml = phoneNum ? `<button class="action-icon-btn btn-call" onclick="callPatient('${phoneNum}')">📞 اتصال</button>` : '';
-            let formattedTime = formatTimeTo12Hour(b.time); // عرض الوقت بصيغة 12 ساعة
+            let formattedTime = formatTimeTo12Hour(b.time); 
+            let currentDocId = document.getElementById('reviewDoctorSelect').value;
             
             listDiv.innerHTML += `
             <div class="booking-card">
@@ -547,7 +558,7 @@
                 
                 <div class="patient-actions">
                     ${phoneBtnHtml}
-                    <button class="action-icon-btn btn-edit" onclick="editBooking('${b.id}', '${b.sequence || ''}', '${b.time || ''}', '${b.patientName || ''}', '${phoneNum}', '${b.patientNotes || ''}')">✏️ تعديل</button>
+                    <button class="action-icon-btn btn-edit" onclick="editBooking('${b.id}', '${b.sequence || ''}', '${b.time || ''}', '${b.patientName || ''}', '${phoneNum}', '${b.patientNotes || ''}', '${currentDocId}')">✏️ تعديل</button>
                     <button class="action-icon-btn btn-delete" onclick="deleteBooking('${b.id}')">🗑️ حذف</button>
                 </div>
             </div>`;
@@ -558,14 +569,20 @@
         window.location.href = `tel:${phone}`;
     }
 
-    window.editBooking = function(id, seq, time, name, phone, notes) {
+    // 💡 تعديل دالة التعديل لتحديد الطبيب تلقائياً في الكومبو بوكس دون إعادة اختياره
+    window.editBooking = function(id, seq, time, name, phone, notes, docId) {
         document.getElementById('editBookingKey').value = id;
         document.getElementById('resSeq').value = seq;
-        document.getElementById('resTime').value = time;
+        document.getElementById('resTime').value = time; // عرض الوقت الحالي في حقل الإدخال
         document.getElementById('resName').value = name;
         document.getElementById('resPhone').value = phone;
         document.getElementById('resNotes').value = notes;
         
+        // تحديد الطبيب تلقائياً في قائمة الأطباء لشاشة الإدخال
+        if (docId) {
+            document.getElementById('secretaryDoctorSelect').value = docId;
+        }
+
         document.getElementById('formTitle').innerText = "تعديل بيانات الحجز";
         document.getElementById('btnSave').innerText = "حفظ التعديلات";
         document.getElementById('btnCancelEdit').classList.remove('hidden');
