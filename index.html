@@ -85,13 +85,25 @@
             color: var(--success); font-size: 15px;
         }
 
-        /* تنسيق صندوق الإحصائيات العلوي في طابور العيادة */
+        /* 💡 إطارات النيون الجديدة لإحصائيات الطابور */
         .queue-stats-header {
-            display: flex; gap: 10px; margin-bottom: 15px;
+            display: flex; gap: 12px; margin-bottom: 20px;
         }
         .queue-stat-box {
-            flex: 1; background: #1e293b; border: 1px solid #334155; padding: 12px;
-            border-radius: 8px; text-align: center; font-weight: bold; font-size: 14px; color: var(--success);
+            flex: 1; background: #0F172A; padding: 14px;
+            border-radius: 10px; text-align: center; font-weight: bold; font-size: 16px;
+        }
+        /* إطار نيون برتقالي للسجلات */
+        .neon-records {
+            border: 2px solid var(--warning);
+            color: var(--warning);
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.4), inset 0 0 8px rgba(245, 158, 11, 0.1);
+        }
+        /* إطار نيون أخضر للمبالغ */
+        .neon-money {
+            border: 2px solid var(--success);
+            color: var(--success);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.4), inset 0 0 8px rgba(16, 185, 129, 0.1);
         }
 
         .hidden { display: none !important; }
@@ -203,10 +215,10 @@
 
         <div id="doctorQueueTabContent" class="hidden">
             <h2>طابور العيادة الحالي</h2>
-            <!-- 💡 مجموع السجلات ومجموع المبالغ في الأعلى -->
+            <!-- 💡 إطارات النيون الواضحة في الأعلى (برتقالي للسجلات، أخضر للمبالغ) -->
             <div class="queue-stats-header">
-                <div id="queueCountBox" class="queue-stat-box">السجلات: 0</div>
-                <div id="queueTotalBox" class="queue-stat-box">المبالغ: 0 د.ع</div>
+                <div id="queueCountBox" class="queue-stat-box neon-records">السجلات: 0</div>
+                <div id="queueTotalBox" class="queue-stat-box neon-money">المبالغ: 0 د.ع</div>
             </div>
             <div id="queueList"></div>
         </div>
