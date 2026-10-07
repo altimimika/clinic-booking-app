@@ -144,8 +144,9 @@
         <label>تسلسل الحجز:</label>
         <input type="number" id="resSeq" placeholder="مثال: 1" required>
         
+        <!-- 💡 أداة اختيار الوقت البسيطة والخاصة بالموبايل -->
         <label>وقت الحجز:</label>
-        <input type="text" id="resTime" placeholder="مثال: 04:30:00 م أو 4:30 ص" required>
+        <input type="time" id="resTime" required>
         
         <label>اسم المريض:</label>
         <input type="text" id="resName" placeholder="الاسم الثلاثي" required>
@@ -224,11 +225,25 @@
 
     let CLINIC_CODE = localStorage.getItem('clinicCode') || "";
     let doctorAllBookings = [];
-    let clinicDoctorsList = {}; // الاحتفاظ بقائمة الأطباء لتحديد الطبيب تلقائياً
+    let clinicDoctorsList = {};
 
+    // 💡 دالة تحويل الوقت الذكية لتعرض بتنسيق 12 ساعة (ص/م) سواء أتى من الحاسبة أو أداة الوقت في الموبايل
     function formatTimeTo12Hour(timeStr) {
         if (!timeStr) return "---";
         let cleanTime = timeStr.trim();
+        
+        // إذا كان الوقت قادماً من أداة الموبايل (مثلاً 14:30)
+        if (/^\d{2}:\d{2}$/.test(cleanTime)) {
+            let parts = cleanTime.split(':');
+            let hours = parseInt(parts[0], 10);
+            let minutes = parts[1];
+            let period = hours >= 12 ? 'م' : 'ص';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            return `${hours}:${minutes} ${period}`;
+        }
+
+        // إذا كان الوقت قادماً من الحاسبة أو بتنسيق نصي آخر
         let parts = cleanTime.split(' ');
         let timePart = parts[0]; 
         let periodPart = parts[1] || ''; 
@@ -320,7 +335,7 @@
     }
 
     window.loadDoctorsListForSecretary = function(usersObj) {
-        clinicDoctorsList = usersObj; // حفظ القائمة
+        clinicDoctorsList = usersObj;
         const secSelect = document.getElementById('secretaryDoctorSelect');
         const reviewSelect = document.getElementById('reviewDoctorSelect');
         
@@ -474,13 +489,14 @@
         const docId = document.getElementById('secretaryDoctorSelect').value;
         const date = document.getElementById('resDate').value;
         const seq = document.getElementById('resSeq').value;
-        const timeVal = document.getElementById('resTime').value;
+        const rawTime = document.getElementById('resTime').value;
+        const time = formatTimeTo12Hour(rawTime); // تحويل وقت أداة الموبايل إلى صيغة 12 ساعة
         const name = document.getElementById('resName').value.trim();
         const phone = document.getElementById('resPhone').value.trim();
         const notes = document.getElementById('resNotes').value.trim();
         const editKey = document.getElementById('editBookingKey').value;
 
-        if(!docId || !date || !seq || !timeVal || !name) {
+        if(!docId || !date || !seq || !rawTime || !name) {
             alert("يرجى ملء الحقول الإجبارية واختيار الطبيب!");
             return;
         }
@@ -488,7 +504,7 @@
         try {
             const bookingData = {
                 sequence: seq,
-                time: timeVal, // حفظ الوقت كما هو (سواء مدخل يدوياً أو محول)
+                time: time, 
                 patientName: name,
                 phone: phone,          
                 patientPhone: phone,  
@@ -569,19 +585,33 @@
         window.location.href = `tel:${phone}`;
     }
 
-    // 💡 تعديل دالة التعديل لتحديد الطبيب تلقائياً في الكومبو بوكس دون إعادة اختياره
     window.editBooking = function(id, seq, time, name, phone, notes, docId) {
         document.getElementById('editBookingKey').value = id;
         document.getElementById('resSeq').value = seq;
-        document.getElementById('resTime').value = time; // عرض الوقت الحالي في حقل الإدخال
         document.getElementById('resName').value = name;
         document.getElementById('resPhone').value = phone;
         document.getElementById('resNotes').value = notes;
         
-        // تحديد الطبيب تلقائياً في قائمة الأطباء لشاشة الإدخال
         if (docId) {
             document.getElementById('secretaryDoctorSelect').value = docId;
         }
+
+        // محاولة تحويل الوقت المخزن ليتطابق مع أداة اختيار الوقت (HH:mm)
+        let timeInputVal = "";
+        if (time) {
+            let match = time.match(/(\d+):(\d+)\s*(ص|م|AM|PM)?/i);
+            if (match) {
+                let h = parseInt(match[1], 10);
+                let m = match[2];
+                let p = (match[3] || "").toLowerCase();
+                if ((p.includes('م') || p.includes('pm')) && h < 12) h += 12;
+                if ((p.includes('ص') || p.includes('am')) && h === 12) h = 0;
+                timeInputVal = `${String(h).padStart(2, '0')}:${m}`;
+            } else {
+                timeInputVal = time;
+            }
+        }
+        document.getElementById('resTime').value = timeInputVal;
 
         document.getElementById('formTitle').innerText = "تعديل بيانات الحجز";
         document.getElementById('btnSave').innerText = "حفظ التعديلات";
