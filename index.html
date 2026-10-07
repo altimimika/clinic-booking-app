@@ -85,7 +85,6 @@
             color: var(--success); font-size: 15px;
         }
 
-        /* 💡 إطارات النيون الجديدة لإحصائيات الطابور */
         .queue-stats-header {
             display: flex; gap: 12px; margin-bottom: 20px;
         }
@@ -93,13 +92,11 @@
             flex: 1; background: #0F172A; padding: 14px;
             border-radius: 10px; text-align: center; font-weight: bold; font-size: 16px;
         }
-        /* إطار نيون برتقالي للسجلات */
         .neon-records {
             border: 2px solid var(--warning);
             color: var(--warning);
             box-shadow: 0 0 12px rgba(245, 158, 11, 0.4), inset 0 0 8px rgba(245, 158, 11, 0.1);
         }
-        /* إطار نيون أخضر للمبالغ */
         .neon-money {
             border: 2px solid var(--success);
             color: var(--success);
@@ -137,7 +134,7 @@
         <button id="btnLogin" onclick="login()">تسجيل الدخول</button>
     </div>
 
-    <!-- شاشة السكرتير -->
+    <!-- شاشة السكرتير أو الإدارة -->
     <div id="secretaryScreen" class="card hidden">
         <div id="welcomeSec" style="color: var(--success); font-weight: bold; margin-bottom: 15px; text-align: center;"></div>
         
@@ -180,7 +177,7 @@
         <h2>سجل الحجوزات الشامل</h2>
         <label>اختر الطبيب:</label>
         <select id="reviewDoctorSelect" onchange="loadReviewBookings()">
-            <option value="">اختر الطبيب...</option>
+            <option value="">اختر الطبيب لعرض السجل...</option>
         </select>
         <div class="doctor-date-picker">
             <label>اختر التاريخ:</label>
@@ -215,7 +212,6 @@
 
         <div id="doctorQueueTabContent" class="hidden">
             <h2>طابور العيادة الحالي</h2>
-            <!-- 💡 إطارات النيون الواضحة في الأعلى (برتقالي للسجلات، أخضر للمبالغ) -->
             <div class="queue-stats-header">
                 <div id="queueCountBox" class="queue-stat-box neon-records">السجلات: 0</div>
                 <div id="queueTotalBox" class="queue-stat-box neon-money">المبالغ: 0 د.ع</div>
@@ -226,6 +222,33 @@
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
     </div>
 
+</div>
+
+<!-- نافذة منبثقة لتعديل الحجز مباشرة للطبيب -->
+<div id="doctorEditCard" class="card hidden" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 450px; z-index: 9999; border: 2px solid var(--primary);">
+    <h2>تعديل بيانات الحجز</h2>
+    <input type="hidden" id="docEditKey" value="">
+    
+    <label>التاريخ:</label>
+    <input type="date" id="docEditDate">
+
+    <label>التسلسل:</label>
+    <input type="number" id="docEditSeq">
+
+    <label>الوقت:</label>
+    <input type="time" id="docEditTime">
+
+    <label>اسم المريض:</label>
+    <input type="text" id="docEditName">
+
+    <label>رقم الهاتف:</label>
+    <input type="tel" id="docEditPhone">
+
+    <label>ملاحظات:</label>
+    <input type="text" id="docEditNotes">
+
+    <button onclick="saveDoctorBookingEdit()" style="background-color: var(--success);">💾 حفظ التعديلات</button>
+    <button onclick="closeDoctorEditModal()" style="background-color: var(--danger);">إلغاء التعديل</button>
 </div>
 
 <script type="module">
@@ -444,7 +467,7 @@
         filtered.forEach(b => {
             let statusText = b.patientStatus || "قيد الانتظار";
             let statusBg = "#334155"; 
-            if (statusText === "حاضر") statusBg = "#10B981";       
+            if (statusText === "حاضر") statusBg = "#10B981";        
             else if (statusText === "لم يحضر") statusBg = "#F59E0B"; 
             else if (statusText === "تم الالغاء") statusBg = "#EF4444"; 
 
@@ -462,11 +485,78 @@
                 
                 <div class="patient-actions">
                     ${phoneBtnHtml}
-                    <button class="action-icon-btn btn-edit" onclick="editBooking('${b.id}', '${b.sequence || ''}', '${b.time || ''}', '${b.patientName || ''}', '${phoneNum}', '${b.patientNotes || ''}')">✏️ تعديل</button>
+                    <button class="action-icon-btn btn-edit" onclick="openDoctorEditModal('${b.id}', '${b.sequence || ''}', '${b.time || ''}', '${b.patientName || ''}', '${phoneNum}', '${b.patientNotes || ''}')">✏️ تعديل</button>
                     <button class="action-icon-btn btn-delete" onclick="deleteBookingFromDoctor('${b.id}')">🗑️ حذف</button>
                 </div>
             </div>`;
         });
+    }
+
+    // دوال تعديل الحجز الخاصة بالطبيب وإرجاعه للواجهة الرئيسية تلقائياً
+    window.openDoctorEditModal = function(id, seq, time, name, phone, notes) {
+        document.getElementById('docEditKey').value = id;
+        document.getElementById('docEditDate').value = document.getElementById('doctorDateFilter').value;
+        document.getElementById('docEditSeq').value = seq;
+        document.getElementById('docEditName').value = name;
+        document.getElementById('docEditPhone').value = phone;
+        document.getElementById('docEditNotes').value = notes;
+
+        let timeInputVal = "";
+        if (time) {
+            let match = time.match(/(\d+):(\d+)\s*(ص|م|AM|PM)?/i);
+            if (match) {
+                let h = parseInt(match[1], 10);
+                let m = match[2];
+                let p = (match[3] || "").toLowerCase();
+                if ((p.includes('م') || p.includes('pm')) && h < 12) h += 12;
+                if ((p.includes('ص') || p.includes('am')) && h === 12) h = 0;
+                timeInputVal = `${String(h).padStart(2, '0')}:${m}`;
+            } else {
+                timeInputVal = time;
+            }
+        }
+        document.getElementById('docEditTime').value = timeInputVal;
+        document.getElementById('doctorEditCard').classList.remove('hidden');
+    }
+
+    window.closeDoctorEditModal = function() {
+        document.getElementById('doctorEditCard').classList.add('hidden');
+        showScreen('doctorScreen'); // العودة للواجهة الرئيسية للطبيب
+    }
+
+    window.saveDoctorBookingEdit = async function() {
+        const docId = localStorage.getItem('doctorId');
+        const editKey = document.getElementById('docEditKey').value;
+        const date = document.getElementById('docEditDate').value;
+        const seq = document.getElementById('docEditSeq').value;
+        const rawTime = document.getElementById('docEditTime').value;
+        const time = formatTimeTo12Hour(rawTime);
+        const name = document.getElementById('docEditName').value.trim();
+        const phone = document.getElementById('docEditPhone').value.trim();
+        const notes = document.getElementById('docEditNotes').value.trim();
+
+        if(!docId || !date || !seq || !rawTime || !name) {
+            alert("يرجى ملء الحقول الإجبارية!");
+            return;
+        }
+
+        try {
+            const bookingData = {
+                sequence: seq,
+                time: time,
+                patientName: name,
+                phone: phone,          
+                patientPhone: phone,  
+                patientNotes: notes,
+                timestamp: Date.now()
+            };
+
+            await update(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}/${editKey}`), bookingData);
+            alert("✅ تم تعديل الحجز بنجاح!");
+            closeDoctorEditModal(); // إغلاق النافذة والعودة تلقائياً للواجهة الرئيسية
+        } catch (e) {
+            alert("خطأ أثناء التعديل: " + e.message);
+        }
     }
 
     window.loadDoctorQueue = function() {
