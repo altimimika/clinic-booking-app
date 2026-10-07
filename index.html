@@ -389,6 +389,13 @@
         document.getElementById('secReviewDateFilter').value = today;
         document.getElementById('resDate').value = today;
         checkAutoLogin();
+        
+        // 💡 ضع كود تسجيل الـ Service Worker هنا
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('Service Worker Registered Successfully'))
+                .catch((err) => console.log('Service Worker Registration Failed', err));
+        }
     }
 
     window.loadDoctorDashboard = function() {
