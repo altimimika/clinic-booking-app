@@ -225,6 +225,19 @@
     let CLINIC_CODE = localStorage.getItem('clinicCode') || "";
     let doctorAllBookings = [];
 
+    // دالة مساعدة لتحويل وقت 24 ساعة إلى صيغة 12 ساعة مع ص/م (متوافقة مع الحاسبة)
+    function formatTimeTo12Hour(time24) {
+        if (!time24) return "---";
+        let parts = time24.split(':');
+        if (parts.length < 2) return time24;
+        let hours = parseInt(parts[0], 10);
+        let minutes = parts[1];
+        let period = hours >= 12 ? 'م' : 'ص';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // الرقم 0 يتحول إلى 12
+        return `${hours}:${minutes} ${period}`;
+    }
+
     window.login = async function() {
         const clinicCodeInput = document.getElementById('loginClinicCode').value.trim();
         const uInput = document.getElementById('loginUsername').value.trim();
@@ -384,18 +397,19 @@
         filtered.forEach(b => {
             let statusText = b.patientStatus || "قيد الانتظار";
             let statusBg = "#334155"; 
-            if (statusText === "حاضر") statusBg = "#10B981";       // 🟢 أخضر
-            else if (statusText === "لم يحضر") statusBg = "#F59E0B"; // 🟠 برتقالي
-            else if (statusText === "تم الالغاء") statusBg = "#EF4444"; // 🔴 أحمر
+            if (statusText === "حاضر") statusBg = "#10B981";       
+            else if (statusText === "لم يحضر") statusBg = "#F59E0B"; 
+            else if (statusText === "تم الالغاء") statusBg = "#EF4444"; 
 
             let phoneNum = b.patientPhone || b.phone || '';
             let phoneBtnHtml = phoneNum ? `<button class="action-icon-btn btn-call" onclick="callPatient('${phoneNum}')">📞 اتصال</button>` : '';
+            let formattedTime = formatTimeTo12Hour(b.time); // عرض الوقت بصيغة 12 ساعة
 
             listDiv.innerHTML += `
             <div class="booking-card" style="border-right-color: ${statusBg};">
                 <div class="seq">تسلسل: ${b.sequence || '---'}</div>
                 <div>👤 المريض: ${b.patientName || 'بدون اسم'}</div>
-                <div>🕒 الوقت: ${b.time || '---'} | 📱 الهاتف: ${phoneNum || 'لا يوجد'}</div>
+                <div>🕒 الوقت: ${formattedTime} | 📱 الهاتف: ${phoneNum || 'لا يوجد'}</div>
                 <div class="status-badge" style="background-color: ${statusBg};">📌 الحالة: ${statusText}</div>
                 ${b.patientNotes ? `<div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">💬 ملاحظات: ${b.patientNotes}</div>` : ''}
                 
@@ -444,33 +458,34 @@
         });
     }
 
-    // حفظ أو تعديل حجز
+    // حفظ أو تعديل حجز (تم تحويل الوقت بصيغة 12 ساعة قبل الإرسال)
     window.saveBooking = async function() {
         const docId = document.getElementById('secretaryDoctorSelect').value;
         const date = document.getElementById('resDate').value;
         const seq = document.getElementById('resSeq').value;
-        const time = document.getElementById('resTime').value;
+        const rawTime = document.getElementById('resTime').value;
+        const time = formatTimeTo12Hour(rawTime); // تحويل الوقت إلى 12 ساعة (ص/م)
         const name = document.getElementById('resName').value.trim();
         const phone = document.getElementById('resPhone').value.trim();
         const notes = document.getElementById('resNotes').value.trim();
         const editKey = document.getElementById('editBookingKey').value;
 
-        if(!docId || !date || !seq || !time || !name) {
+        if(!docId || !date || !seq || !rawTime || !name) {
             alert("يرجى ملء الحقول الإجبارية واختيار الطبيب!");
             return;
         }
 
         try {
             const bookingData = {
-    sequence: seq,
-    time: time,
-    patientName: name,
-    phone: phone,         // رقم الهاتف
-    patientPhone: phone,  // لدعم الاحتمالين
-    patientNotes: notes,
-    patientStatus: "قيد الانتظار",
-    timestamp: Date.now()
-};
+                sequence: seq,
+                time: time,
+                patientName: name,
+                phone: phone,          
+                patientPhone: phone,  
+                patientNotes: notes,
+                patientStatus: "قيد الانتظار",
+                timestamp: Date.now()
+            };
 
             if (editKey) {
                 await update(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}/${editKey}`), bookingData);
@@ -521,11 +536,12 @@
         filtered.forEach(b => {
             let phoneNum = b.patientPhone || b.phone || '';
             let phoneBtnHtml = phoneNum ? `<button class="action-icon-btn btn-call" onclick="callPatient('${phoneNum}')">📞 اتصال</button>` : '';
+            let formattedTime = formatTimeTo12Hour(b.time); // عرض الوقت بصيغة 12 ساعة
             
             listDiv.innerHTML += `
             <div class="booking-card">
                 <div class="seq">تسلسل: ${b.sequence} - ${b.patientName}</div>
-                <div>🕒 الوقت: ${b.time || '---'} | 📱 الهاتف: ${phoneNum || 'لا يوجد'}</div>
+                <div>🕒 الوقت: ${formattedTime} | 📱 الهاتف: ${phoneNum || 'لا يوجد'}</div>
                 <div class="status-badge" style="background-color: #334155;">📌 الحالة: ${b.patientStatus || 'قيد الانتظار'}</div>
                 ${b.patientNotes ? `<div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">💬 ملاحظات: ${b.patientNotes}</div>` : ''}
                 
