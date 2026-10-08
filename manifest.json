@@ -1,6 +1,6 @@
 {
   "name": "نظام إدارة عيادتي الذكي",
-  "short_name": "MY CLINIC",
+  "short_name": "MyClinic",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0F172A",
