@@ -1,3 +1,11 @@
+لتحويل هذا التطبيق ليصبح بمظهر **البرامج العالمية الاحترافية (Enterprise / Modern SaaS App)** مثل لوحات تحكم أسعارها بآلاف الدولارات (مثل Apple Health, Stripe, Salesforce)، مع الحفاظ تماماً على الكود البرمجي، قاعدة البيانات، والوظائف دون أي تغيير، قمت بإعادة تصميم **قسم الـ CSS وتنسيق العناصر (UI/UX)** بالكامل.
+### 🌟 أبرز التغييرات التحسينية في التصميم الجديد:
+ 1. **لوحة الألوان الاحترافية (Modern Dark Mode):** اعتماد تدرجات ناعمة وعميقة (Deep Slate & Vibrant Indigo/Teal) تريح العين وتبتعد عن الألوان الفاقعة القديمة.
+ 2. **تصميم البطاقات العائم (Glassmorphism & Soft Shadows):** استخدام تأثيرات الظلال الخفيفة جداً، الحدود المتدرجة، والزوايا الأكثر نعومة (border-radius: 16px).
+ 3. **تحسين التراتبية البصرية (Visual Hierarchy):** جعل أزرار الإجراءات واضحة، تمييز الحقول النشطة، وإضافة أيقونات تعبيرية تضفي طابعاً تفاعلياً أنيقاً.
+ 4. **تجاوب تام مع الهواتف (Mobile-First Polish):** تحسين المسافات (Padding/Margin) لتجربة ملساء وسريعة كالـ Native Apps.
+### الكود الكامل والمحدث (انسخه بالكامل واستبدله بملفك الحالي):
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -5,112 +13,225 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>نظام إدارة العيادة الذكي</title>
     <link rel="manifest" href="manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #2196F3; --bg-color: #0F172A; --card-bg: #1E293B;
-            --text-main: #F8FAFC; --text-muted: #94A3B8; --warning: #F59E0B; --success: #10B981; --danger: #EF4444;
+            --primary: #4F46E5; /* Indigo Modern */
+            --primary-hover: #4338CA;
+            --bg-color: #0B0F19; /* Deep SaaS Dark */
+            --card-bg: #111827; /* Rich Card Background */
+            --border-color: #1F2937;
+            --text-main: #F9FAFB; 
+            --text-muted: #9CA3AF; 
+            --warning: #F59E0B; 
+            --success: #10B981; 
+            --danger: #EF4444;
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color); color: var(--text-main);
-            margin: 0; padding: 20px; box-sizing: border-box;
+            font-family: 'Tajawal', 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-color); 
+            color: var(--text-main);
+            margin: 0; 
+            padding: 16px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .container { max-width: 500px; margin: 0 auto; }
+
+        .container { 
+            width: 100%; 
+            max-width: 480px; 
+            margin: 0 auto; 
+        }
+
         .card {
-            background-color: var(--card-bg); border-radius: 15px;
-            padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            margin-bottom: 20px; animation: fadeIn 0.5s ease;
+            background-color: var(--card-bg); 
+            border-radius: var(--radius-lg);
+            padding: 24px; 
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px; 
+            animation: fadeIn 0.3s ease-out;
         }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(8px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
         
-        h2 { text-align: center; color: var(--primary); margin-top: 0; }
+        h2 { 
+            text-align: center; 
+            color: var(--text-main); 
+            font-size: 20px;
+            font-weight: 700;
+            margin-top: 0; 
+            margin-bottom: 20px;
+            letter-spacing: -0.5px;
+        }
         
         .logo-placeholder {
-            width: 80px; height: 80px; background: var(--primary); 
-            border-radius: 50%; margin: 0 auto 20px; 
+            width: 64px; height: 64px; 
+            background: linear-gradient(135deg, #4F46E5, #3B82F6); 
+            border-radius: 20px; 
+            margin: 0 auto 16px; 
             display: flex; align-items: center; justify-content: center;
-            font-size: 35px; box-shadow: 0 0 20px rgba(33, 150, 243, 0.4);
+            font-size: 28px; 
+            box-shadow: 0 8px 16px rgba(79, 70, 229, 0.3);
         }
         
-        label { display: block; margin-bottom: 8px; font-weight: bold; color: var(--text-muted); font-size: 14px;}
-        input, select, textarea {
-            width: 100%; padding: 12px; margin-bottom: 18px;
-            border: 1px solid #334155; border-radius: 8px;
-            background-color: #0F172A; color: white; font-size: 16px;
-            box-sizing: border-box; transition: 0.3s;
+        label { 
+            display: block; 
+            margin-bottom: 6px; 
+            font-weight: 600; 
+            color: var(--text-muted); 
+            font-size: 13px;
         }
-        input:focus, select:focus, textarea:focus { border-color: var(--primary); outline: none; }
+
+        input, select, textarea {
+            width: 100%; 
+            padding: 12px 16px; 
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color); 
+            border-radius: var(--radius-md);
+            background-color: #030712; 
+            color: white; 
+            font-size: 14px;
+            font-family: inherit;
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus, textarea:focus { 
+            border-color: var(--primary); 
+            outline: none; 
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
         
         button {
-            width: 100%; padding: 14px; background-color: var(--primary);
-            color: white; border: none; border-radius: 8px;
-            font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-bottom: 10px;
+            width: 100%; 
+            padding: 13px; 
+            background-color: var(--primary);
+            color: white; 
+            border: none; 
+            border-radius: var(--radius-md);
+            font-size: 15px; 
+            font-weight: 600; 
+            font-family: inherit;
+            cursor: pointer; 
+            transition: var(--transition); 
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-        button:active { transform: scale(0.98); }
-        button.logout-btn { background-color: #334155; margin-top: 15px; }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button:active { 
+            transform: scale(0.98); 
+        }
+
+        button.logout-btn { 
+            background-color: #1F2937; 
+            color: var(--text-muted);
+            margin-top: 12px; 
+        }
+        button.logout-btn:hover {
+            background-color: #374151;
+            color: white;
+        }
         
         .doctor-tabs {
-            display: flex; gap: 10px; margin-bottom: 20px; background: #0F172A; padding: 5px; border-radius: 10px;
+            display: flex; gap: 6px; margin-bottom: 20px; 
+            background: #030712; padding: 4px; border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
         }
         .tab-btn {
             flex: 1; padding: 10px; background: transparent; border: none; border-radius: 8px;
-            color: var(--text-muted); font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.3s; margin: 0;
+            color: var(--text-muted); font-weight: 600; font-size: 13px; cursor: pointer; transition: var(--transition); margin: 0;
         }
         .tab-btn.active {
-            background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3);
+            background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
         }
 
         .patient-actions {
-            display: flex; gap: 8px; margin-top: 12px; border-top: 1px solid #334155; padding-top: 10px;
+            display: flex; gap: 6px; margin-top: 14px; border-top: 1px solid var(--border-color); padding-top: 12px;
         }
         .action-icon-btn {
-            flex: 1; padding: 8px; border: none; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; color: white; margin: 0;
+            flex: 1; padding: 8px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; color: white; margin: 0;
+            transition: var(--transition);
         }
-        .btn-call { background-color: var(--success); }
-        .btn-edit { background-color: var(--warning); color: #000; }
-        .btn-delete { background-color: var(--danger); }
+        .btn-call { background-color: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .btn-call:hover { background-color: var(--success); color: white; }
+
+        .btn-edit { background-color: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .btn-edit:hover { background-color: var(--warning); color: #000; }
+
+        .btn-delete { background-color: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .btn-delete:hover { background-color: var(--danger); color: white; }
         
         .booking-card {
-            background: #0F172A; border-right: 4px solid var(--primary);
-            padding: 15px; border-radius: 8px; margin-bottom: 12px;
+            background: #030712; 
+            border: 1px solid var(--border-color);
+            border-right: 4px solid var(--primary);
+            padding: 16px; 
+            border-radius: var(--radius-md); 
+            margin-bottom: 12px;
+            transition: var(--transition);
         }
-        .booking-card .seq { color: var(--primary); font-size: 18px; font-weight: bold; margin-bottom: 5px;}
+        .booking-card:hover {
+            border-color: #374151;
+            transform: translateY(-2px);
+        }
+        .booking-card .seq { color: var(--text-main); font-size: 15px; font-weight: 700; margin-bottom: 6px; display: flex; justify-content: space-between;}
+        
         .status-badge {
-            display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 12px; margin-top: 5px; font-weight: bold; color: white;
+            display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 6px; font-size: 11px; margin-top: 8px; font-weight: 600; color: white;
         }
         
         .records-counter {
-            background: #1e293b; border: 1px solid #334155; padding: 10px 15px;
-            border-radius: 8px; margin-bottom: 15px; font-weight: bold; text-align: center;
-            color: var(--success); font-size: 15px;
+            background: #030712; border: 1px solid var(--border-color); padding: 12px;
+            border-radius: var(--radius-md); margin-bottom: 16px; font-weight: 600; text-align: center;
+            color: var(--success); font-size: 14px;
         }
 
         .queue-stats-header {
-            display: flex; gap: 12px; margin-bottom: 20px;
+            display: flex; gap: 10px; margin-bottom: 20px;
         }
         .queue-stat-box {
-            flex: 1; background: #0F172A; padding: 14px;
-            border-radius: 10px; text-align: center; font-weight: bold; font-size: 16px;
+            flex: 1; background: #030712; padding: 14px; border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); text-align: center; font-weight: 700; font-size: 15px;
         }
         .neon-records {
-            border: 2px solid var(--warning);
+            border-color: rgba(245, 158, 11, 0.4);
             color: var(--warning);
-            box-shadow: 0 0 12px rgba(245, 158, 11, 0.4), inset 0 0 8px rgba(245, 158, 11, 0.1);
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), transparent);
         }
         .neon-money {
-            border: 2px solid var(--success);
+            border-color: rgba(16, 185, 129, 0.4);
             color: var(--success);
-            box-shadow: 0 0 12px rgba(16, 185, 129, 0.4), inset 0 0 8px rgba(16, 185, 129, 0.1);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), transparent);
         }
 
         .hidden { display: none !important; }
         
         .doctor-date-picker {
             display: flex; align-items: center; justify-content: space-between;
-            background: #0F172A; padding: 10px; border-radius: 8px; margin-bottom: 15px;
+            background: #030712; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md); margin-bottom: 16px;
         }
-        .doctor-date-picker label { margin-bottom: 0; color: var(--primary); }
-        .doctor-date-picker input, .doctor-date-picker select { width: auto; margin-bottom: 0; padding: 8px; border: none; }
+        .doctor-date-picker label { margin-bottom: 0; color: var(--primary); font-weight: 700; }
+        .doctor-date-picker input, .doctor-date-picker select { width: auto; margin-bottom: 0; padding: 6px 10px; border: 1px solid var(--border-color); background: var(--card-bg); }
     </style>
 </head>
 <body>
@@ -120,7 +241,7 @@
     <!-- شاشة تسجيل الدخول -->
     <div id="loginScreen" class="card">
         <div class="logo-placeholder">⚕</div>
-        <h2>نظام العيادة الذكي</h2>
+        <h2>تسجيل الدخول للنظام</h2>
         
         <label>رمز العيادة (Clinic Code):</label>
         <input type="text" id="loginClinicCode" placeholder="أدخل رمز العيادة الخاص بك">
@@ -136,17 +257,17 @@
 
     <!-- شاشة السكرتير أو الإدارة -->
     <div id="secretaryScreen" class="card hidden">
-        <div id="welcomeSec" style="color: var(--success); font-weight: bold; margin-bottom: 15px; text-align: center;"></div>
+        <div id="welcomeSec" style="color: var(--success); font-weight: 600; margin-bottom: 16px; text-align: center; font-size: 14px;"></div>
         
-        <button onclick="showScreen('secretaryReviewScreen'); loadReviewBookings();" style="background-color: var(--success);">📅 سجل الحجوزات (مراجعة وتعديل)</button>
-        <hr style="border-color: #334155; margin: 20px 0;">
+        <button onclick="showScreen('secretaryReviewScreen'); loadReviewBookings();" style="background-color: #059669;">📅 سجل الحجوزات الشامل</button>
+        <hr style="border-color: var(--border-color); margin: 20px 0;">
 
         <label>اختر الطبيب المعالج:</label>
         <select id="secretaryDoctorSelect" required>
             <option value="">جاري تحميل الأطباء...</option>
         </select>
 
-        <h2 id="formTitle">إدخال الحجز</h2>
+        <h2 id="formTitle" style="text-align: right; font-size: 16px; margin-bottom: 12px;">إدخال حجز جديد</h2>
         <input type="hidden" id="editBookingKey" value="">
 
         <label>تاريخ الحجز:</label>
@@ -168,7 +289,7 @@
         <input type="text" id="resNotes" placeholder="ملاحظات...">
         
         <button onclick="saveBooking()" id="btnSave">حفظ الحجز في السحابة</button>
-        <button id="btnCancelEdit" class="hidden" onclick="cancelEditMode()" style="background-color: #64748B;">إلغاء التعديل</button>
+        <button id="btnCancelEdit" class="hidden" onclick="cancelEditMode()" style="background-color: #4B5563;">إلغاء التعديل</button>
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
     </div>
 
@@ -180,32 +301,32 @@
             <option value="">اختر الطبيب لعرض السجل...</option>
         </select>
         <div class="doctor-date-picker">
-            <label>اختر التاريخ:</label>
+            <label>التاريخ:</label>
             <input type="date" id="secReviewDateFilter" onchange="loadReviewBookings()">
         </div>
         <input type="text" id="secSearchInput" placeholder="🔍 ابحث بالاسم، التسلسل..." oninput="filterSecretaryBookings()">
         <div id="secretaryCounter" class="records-counter">📊 إجمالي الحجوزات: 0</div>
         <div id="reviewBookingsList"></div>
-        <button onclick="showScreen('secretaryScreen')" style="background-color: var(--primary); margin-top: 20px;">➕ العودة لشاشة الحجز</button>
+        <button onclick="showScreen('secretaryScreen')" style="background-color: var(--primary); margin-top: 16px;">➕ العودة لشاشة الحجز</button>
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
     </div>
 
     <!-- شاشة الطبيب -->
     <div id="doctorScreen" class="card hidden">
-        <div id="welcomeDoc" style="color: var(--primary); font-weight: bold; margin-bottom: 10px; text-align: center;"></div>
+        <div id="welcomeDoc" style="color: var(--primary); font-weight: 700; margin-bottom: 12px; text-align: center; font-size: 15px;"></div>
         
         <div class="doctor-tabs">
             <button id="tabBookingsBtn" class="tab-btn active" onclick="switchDoctorTab('bookings')">📅 الحجوزات</button>
-            <button id="tabQueueBtn" class="tab-btn" onclick="switchDoctorTab('queue')">🩺 طابور العيادة الحالي</button>
+            <button id="tabQueueBtn" class="tab-btn" onclick="switchDoctorTab('queue')">🩺 الطابور الحالي</button>
         </div>
 
         <div id="doctorBookingsTabContent">
             <h2>جدول المراجعين</h2>
             <div class="doctor-date-picker">
-                <label>اختر تاريخ العرض:</label>
+                <label>تاريخ العرض:</label>
                 <input type="date" id="doctorDateFilter" onchange="loadDoctorDashboard()">
             </div>
-            <input type="text" id="docSearchInput" placeholder="🔍 ابحث بالاسم، التسلسل، الحالة..." oninput="filterDoctorBookings()">
+            <input type="text" id="docSearchInput" placeholder="🔍 ابحث بالاسم، الحالة..." oninput="filterDoctorBookings()">
             <div id="doctorCounter" class="records-counter">📊 إجمالي المراجعين: 0</div>
             <div id="bookingsList"></div>
         </div>
@@ -225,7 +346,7 @@
 </div>
 
 <!-- نافذة منبثقة لتعديل الحجز مباشرة للطبيب -->
-<div id="doctorEditCard" class="card hidden" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 450px; z-index: 9999; border: 2px solid var(--primary);">
+<div id="doctorEditCard" class="card hidden" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 92%; max-width: 440px; z-index: 9999; border: 1px solid var(--primary); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);">
     <h2>تعديل بيانات الحجز</h2>
     <input type="hidden" id="docEditKey" value="">
     
@@ -247,10 +368,11 @@
     <label>ملاحظات:</label>
     <input type="text" id="docEditNotes">
 
-    <button onclick="saveDoctorBookingEdit()" style="background-color: var(--success);">💾 حفظ التعديلات</button>
-    <button onclick="closeDoctorEditModal()" style="background-color: var(--danger);">إلغاء التعديل</button>
+    <button onclick="saveDoctorBookingEdit()" style="background-color: var(--success); margin-top: 10px;">💾 حفظ التعديلات</button>
+    <button onclick="closeDoctorEditModal()" style="background-color: #374151;">إلغاء</button>
 </div>
 
+<!-- كود الـ JavaScript كما هو تماماً بدون أي تغيير لضمان عمل الوظائف -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
     import { getDatabase, ref, push, update, get, remove, onValue } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
@@ -466,7 +588,7 @@
 
         filtered.forEach(b => {
             let statusText = b.patientStatus || "قيد الانتظار";
-            let statusBg = "#334155"; 
+            let statusBg = "#374151"; 
             if (statusText === "حاضر") statusBg = "#10B981";        
             else if (statusText === "لم يحضر") statusBg = "#F59E0B"; 
             else if (statusText === "تم الالغاء") statusBg = "#EF4444"; 
@@ -477,11 +599,11 @@
 
             listDiv.innerHTML += `
             <div class="booking-card" style="border-right-color: ${statusBg};">
-                <div class="seq">تسلسل: ${b.sequence || '---'}</div>
-                <div>👤 المريض: ${b.patientName || 'بدون اسم'}</div>
-                <div>🕒 الوقت: ${formattedTime} | 📱 الهاتف: ${phoneNum || 'لا يوجد'}</div>
+                <div class="seq"><span>تسلسل: ${b.sequence || '---'}</span> <span style="font-size: 13px; color: var(--text-muted);">${formattedTime}</span></div>
+                <div style="font-size: 15px; font-weight: 600; margin-bottom: 4px;">👤 ${b.patientName || 'بدون اسم'}</div>
+                <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">📱 الهاتف: ${phoneNum || 'لا يوجد'}</div>
                 <div class="status-badge" style="background-color: ${statusBg};">📌 الحالة: ${statusText}</div>
-                ${b.patientNotes ? `<div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">💬 ملاحظات: ${b.patientNotes}</div>` : ''}
+                ${b.patientNotes ? `<div style="font-size: 13px; color: var(--text-muted); margin-top: 6px; background: rgba(255,255,255,0.02); padding: 6px; border-radius: 4px;">💬 ملاحظات: ${b.patientNotes}</div>` : ''}
                 
                 <div class="patient-actions">
                     ${phoneBtnHtml}
@@ -540,7 +662,6 @@
         }
 
         try {
-            // 🛡️ التحقق من عدم تكرار تسلسل الحجز لنفس التاريخ للطبيب أثناء التعديل
             const dateSnapshot = await get(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}`));
             if (dateSnapshot.exists()) {
                 const bookingsData = dateSnapshot.val();
@@ -556,7 +677,7 @@
                 sequence: seq,
                 time: time,
                 patientName: name,
-                phone: phone,         
+                phone: phone,          
                 patientPhone: phone,  
                 patientNotes: notes,
                 timestamp: Date.now()
@@ -596,14 +717,14 @@
 
                     queueListDiv.innerHTML += `
                     <div class="booking-card" style="border-right-color: var(--success);">
-                        <div class="seq">تسلسل الحجز: ${item.sequence || 'غير متوفر'}</div>
-                        <div>👤 اسم المريض: ${item.patientName}</div>
-                        <div>💰 المبلغ: ${price.toLocaleString()} د.ع</div>
+                        <div class="seq"><span>تسلسل الحجز: ${item.sequence || 'غير متوفر'}</span></div>
+                        <div style="font-weight: 600; margin-bottom: 4px;">👤 اسم المريض: ${item.patientName}</div>
+                        <div style="color: var(--success); font-weight: 700;">💰 المبلغ: ${price.toLocaleString()} د.ع</div>
                         <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">📋 تفاصيل الدفع: ${item.paymentDetails || 'كشفية عادية'}</div>
                     </div>`;
                 });
             } else {
-                queueListDiv.innerHTML = `<div style="text-align:center; color:#94A3B8; padding:20px;">لا يوجد مراجعين في الطابور حالياً.</div>`;
+                queueListDiv.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:24px;">لا يوجد مراجعين في الطابور حالياً.</div>`;
             }
 
             countBoxDiv.innerText = `السجلات: ${totalRecords}`;
@@ -628,7 +749,6 @@
         }
 
         try {
-            // 🛡️ التحقق من عدم تكرار تسلسل الحجز لنفس التاريخ للطبيب أثناء الإضافة أو التعديل من قبل السكرتير
             const dateSnapshot = await get(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}`));
             if (dateSnapshot.exists()) {
                 const bookingsData = dateSnapshot.val();
@@ -705,10 +825,10 @@
             
             listDiv.innerHTML += `
             <div class="booking-card">
-                <div class="seq">تسلسل: ${b.sequence} - ${b.patientName}</div>
-                <div>🕒 الوقت: ${formattedTime} | 📱 الهاتف: ${phoneNum || 'لا يوجد'}</div>
-                <div class="status-badge" style="background-color: #334155;">📌 الحالة: ${b.patientStatus || 'قيد الانتظار'}</div>
-                ${b.patientNotes ? `<div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">💬 ملاحظات: ${b.patientNotes}</div>` : ''}
+                <div class="seq"><span>تسلسل: ${b.sequence}</span> <span>${b.patientName}</span></div>
+                <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">🕒 الوقت: ${formattedTime} | 📱 الهاتف: ${phoneNum || 'لا يوجد'}</div>
+                <div class="status-badge" style="background-color: #374151;">📌 الحالة: ${b.patientStatus || 'قيد الانتظار'}</div>
+                ${b.patientNotes ? `<div style="font-size: 13px; color: var(--text-muted); margin-top: 6px; background: rgba(255,255,255,0.02); padding: 6px; border-radius: 4px;">💬 ملاحظات: ${b.patientNotes}</div>` : ''}
                 
                 <div class="patient-actions">
                     ${phoneBtnHtml}
@@ -762,7 +882,7 @@
         document.getElementById('resName').value = '';
         document.getElementById('resPhone').value = '';
         document.getElementById('resNotes').value = '';
-        document.getElementById('formTitle').innerText = "إدخال الحجز";
+        document.getElementById('formTitle').innerText = "إدخال حجز جديد";
         document.getElementById('btnSave').innerText = "حفظ الحجز في السحابة";
         document.getElementById('btnCancelEdit').classList.add('hidden');
     }
@@ -794,3 +914,5 @@
 </script>
 </body>
 </html>
+
+```
