@@ -225,7 +225,6 @@
         .doctor-date-picker label { margin-bottom: 0; color: var(--primary); font-weight: 700; }
         .doctor-date-picker input, .doctor-date-picker select { width: auto; margin-bottom: 0; padding: 6px 10px; border: 1px solid var(--border-color); background: var(--card-bg); }
 
-        /* تعديل نافذة التعديل للطبيب لتظهر بسلاسة من المنتصف */
         #doctorEditCard {
             position: fixed;
             top: 50%;
@@ -401,7 +400,7 @@
     let CLINIC_CODE = localStorage.getItem('clinicCode') || "";
     let doctorAllBookings = [];
     let clinicDoctorsList = {};
-    let doctorQueueItems = []; // لتخزين عناصر الطابور بغرض البحث الفوري
+    let doctorQueueItems = [];
 
     function formatTimeTo12Hour(timeStr) {
         if (!timeStr) return "---";
