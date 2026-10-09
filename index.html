@@ -339,7 +339,7 @@
                 <input type="date" id="doctorDateFilter" onchange="loadDoctorDashboard()">
             </div>
             <input type="text" id="docSearchInput" placeholder="🔍 ابحث بالاسم، الحالة..." oninput="filterDoctorBookings()">
-            <div id="doctorCounter" class="records-counter">📊 إجمالي المراجعين: 0</div>
+            <div id="doctorCounter" class="records-counter">📊 إجمالي الحجوزات: 0</div>
             <div id="bookingsList"></div>
         </div>
 
@@ -596,7 +596,7 @@
             return !query || nameMatch || statusMatch;
         });
 
-        counterDiv.innerText = `📊 إجمالي المراجعين: ${filtered.length}`;
+        counterDiv.innerText = `📊 إجمالي الحجوزات: ${filtered.length}`;
         listDiv.innerHTML = '';
 
         filtered.forEach(b => {
