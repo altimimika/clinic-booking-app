@@ -8,10 +8,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #4F46E5; /* Indigo Modern */
+            --primary: #4F46E5;
             --primary-hover: #4338CA;
-            --bg-color: #0B0F19; /* Deep SaaS Dark */
-            --card-bg: #111827; /* Rich Card Background */
+            --bg-color: #0B0F19;
+            --card-bg: #111827;
             --border-color: #1F2937;
             --text-main: #F9FAFB; 
             --text-muted: #9CA3AF; 
@@ -224,6 +224,27 @@
         }
         .doctor-date-picker label { margin-bottom: 0; color: var(--primary); font-weight: 700; }
         .doctor-date-picker input, .doctor-date-picker select { width: auto; margin-bottom: 0; padding: 6px 10px; border: 1px solid var(--border-color); background: var(--card-bg); }
+
+        /* تعديل نافذة التعديل للطبيب لتظهر بسلاسة من المنتصف */
+        #doctorEditCard {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            width: 92%;
+            max-width: 440px;
+            z-index: 9999;
+            border: 1px solid var(--primary);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #doctorEditCard:not(.hidden) {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
     </style>
 </head>
 <body>
@@ -325,6 +346,7 @@
 
         <div id="doctorQueueTabContent" class="hidden">
             <h2>طابور العيادة الحالي</h2>
+            <input type="text" id="queueSearchInput" placeholder="🔍 ابحث في الطابور بالاسم أو التسلسل..." oninput="filterDoctorQueue()">
             <div class="queue-stats-header">
                 <div id="queueCountBox" class="queue-stat-box neon-records">السجلات: 0</div>
                 <div id="queueTotalBox" class="queue-stat-box neon-money">المبالغ: 0 د.ع</div>
@@ -338,7 +360,7 @@
 </div>
 
 <!-- نافذة منبثقة لتعديل الحجز مباشرة للطبيب -->
-<div id="doctorEditCard" class="card hidden" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 92%; max-width: 440px; z-index: 9999; border: 1px solid var(--primary); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);">
+<div id="doctorEditCard" class="card hidden">
     <h2>تعديل بيانات الحجز</h2>
     <input type="hidden" id="docEditKey" value="">
     
@@ -364,7 +386,6 @@
     <button onclick="closeDoctorEditModal()" style="background-color: #374151;">إلغاء</button>
 </div>
 
-<!-- كود الـ JavaScript كما هو تماماً بدون أي تغيير لضمان عمل الوظائف -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
     import { getDatabase, ref, push, update, get, remove, onValue } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
@@ -380,6 +401,7 @@
     let CLINIC_CODE = localStorage.getItem('clinicCode') || "";
     let doctorAllBookings = [];
     let clinicDoctorsList = {};
+    let doctorQueueItems = []; // لتخزين عناصر الطابور بغرض البحث الفوري
 
     function formatTimeTo12Hour(timeStr) {
         if (!timeStr) return "---";
@@ -634,7 +656,6 @@
 
     window.closeDoctorEditModal = function() {
         document.getElementById('doctorEditCard').classList.add('hidden');
-        showScreen('doctorScreen'); 
     }
 
     window.saveDoctorBookingEdit = async function() {
@@ -688,40 +709,53 @@
         if(!docId) return;
 
         onValue(ref(db, `ClinicQueue/${CLINIC_CODE}/${docId}`), (snapshot) => {
-            const queueListDiv = document.getElementById('queueList');
-            const totalBoxDiv = document.getElementById('queueTotalBox');
-            const countBoxDiv = document.getElementById('queueCountBox');
-            queueListDiv.innerHTML = '';
-            
-            let totalAmount = 0;
-            let totalRecords = 0;
-
+            doctorQueueItems = [];
             if (snapshot.exists()) {
                 const data = snapshot.val();
-                let queueItems = [];
-                for(let k in data) queueItems.push(data[k]);
-                
-                totalRecords = queueItems.length;
-
-                queueItems.forEach(item => {
-                    let price = parseFloat(item.payAmount) || 0;
-                    totalAmount += price;
-
-                    queueListDiv.innerHTML += `
-                    <div class="booking-card" style="border-right-color: var(--success);">
-                        <div class="seq"><span>تسلسل الحجز: ${item.sequence || 'غير متوفر'}</span></div>
-                        <div style="font-weight: 600; margin-bottom: 4px;">👤 اسم المريض: ${item.patientName}</div>
-                        <div style="color: var(--success); font-weight: 700;">💰 المبلغ: ${price.toLocaleString()} د.ع</div>
-                        <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">📋 تفاصيل الدفع: ${item.paymentDetails || 'كشفية عادية'}</div>
-                    </div>`;
-                });
-            } else {
-                queueListDiv.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:24px;">لا يوجد مراجعين في الطابور حالياً.</div>`;
+                for(let k in data) doctorQueueItems.push(data[k]);
             }
-
-            countBoxDiv.innerText = `السجلات: ${totalRecords}`;
-            totalBoxDiv.innerText = `المبالغ: ${totalAmount.toLocaleString()} د.ع`;
+            renderQueueList(doctorQueueItems);
         });
+    }
+
+    window.filterDoctorQueue = function() {
+        const query = document.getElementById('queueSearchInput').value.toLowerCase().trim();
+        let filtered = doctorQueueItems.filter(item => {
+            const nameMatch = item.patientName && item.patientName.toLowerCase().includes(query);
+            const seqMatch = item.sequence && item.sequence.toString().includes(query);
+            return !query || nameMatch || seqMatch;
+        });
+        renderQueueList(filtered);
+    }
+
+    window.renderQueueList = function(items) {
+        const queueListDiv = document.getElementById('queueList');
+        const totalBoxDiv = document.getElementById('queueTotalBox');
+        const countBoxDiv = document.getElementById('queueCountBox');
+        queueListDiv.innerHTML = '';
+        
+        let totalAmount = 0;
+        let totalRecords = items.length;
+
+        if (items.length > 0) {
+            items.forEach(item => {
+                let price = parseFloat(item.payAmount) || 0;
+                totalAmount += price;
+
+                queueListDiv.innerHTML += `
+                <div class="booking-card" style="border-right-color: var(--success);">
+                    <div class="seq"><span>تسلسل الحجز: ${item.sequence || 'غير متوفر'}</span></div>
+                    <div style="font-weight: 600; margin-bottom: 4px;">👤 اسم المريض: ${item.patientName}</div>
+                    <div style="color: var(--success); font-weight: 700;">💰 المبلغ: ${price.toLocaleString()} د.ع</div>
+                    <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">📋 تفاصيل الدفع: ${item.paymentDetails || 'كشفية عادية'}</div>
+                </div>`;
+            });
+        } else {
+            queueListDiv.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:24px;">لا يوجد مراجعين مطابقين في الطابور.</div>`;
+        }
+
+        countBoxDiv.innerText = `السجلات: ${totalRecords}`;
+        totalBoxDiv.innerText = `المبالغ: ${totalAmount.toLocaleString()} د.ع`;
     }
 
     window.saveBooking = async function() {
