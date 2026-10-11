@@ -673,7 +673,8 @@
                 const data = snapshot.val();
                 for(let k in data) doctorQueueItems.push(data[k]);
             }
-            renderQueueList(doctorQueueItems, 'queueList', 'queueTotalBox', 'queueCountBox', false);
+            // تمرير true لتفعيل إظهار أزرار الرفع لطابور الطبيب أيضاً
+            renderQueueList(doctorQueueItems, 'queueList', 'queueTotalBox', 'queueCountBox', true);
         });
     }
 
@@ -684,7 +685,7 @@
             const seqMatch = item.sequence && item.sequence.toString().includes(query);
             return !query || nameMatch || seqMatch;
         });
-        renderQueueList(filtered, 'queueList', 'queueTotalBox', 'queueCountBox', false);
+        renderQueueList(filtered, 'queueList', 'queueTotalBox', 'queueCountBox', true);
     }
 
     window.onSecretaryDoctorChanged = function() {
@@ -781,6 +782,16 @@
     window.handleFileSelected = async function(event) {
         const file = event.target.files[0];
         if (!file || !activeUploadVisitId) return;
+
+        // 🛑 إضافة قيد الحجم الأقصى (5 ميجابايت) لحماية التطبيق وباقة فايربيس
+        const maxSizeInMB = 5;
+        const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
+        
+        if (file.size > maxSizeInBytes) {
+            alert(`❌ عذراً، حجم الملف كبير جداً! الحد الأقصى المسموح به هو ${maxSizeInMB} ميجابايت.\nحجم الملف الحالي: ${(file.size / (1024 * 1024)).toFixed(2)} ميجابايت.`);
+            event.target.value = ''; // تفريغ الاختيار ليتمكن المستخدم من اختيار ملف آخر
+            return;
+        }
 
         const reader = new FileReader();
         reader.onload = async function(e) {
