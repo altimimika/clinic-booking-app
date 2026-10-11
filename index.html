@@ -159,9 +159,10 @@
 
         .patient-actions {
             display: flex; gap: 6px; margin-top: 14px; border-top: 1px solid var(--border-color); padding-top: 12px;
+            flex-wrap: wrap;
         }
         .action-icon-btn {
-            flex: 1; padding: 8px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; color: white; margin: 0;
+            flex: 1; min-width: 90px; padding: 8px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; color: white; margin: 0;
             transition: var(--transition);
         }
         .btn-call { background-color: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
@@ -172,6 +173,12 @@
 
         .btn-delete { background-color: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
         .btn-delete:hover { background-color: var(--danger); color: white; }
+
+        .btn-camera { background-color: rgba(236, 72, 153, 0.15); color: #EC4899; border: 1px solid rgba(236, 72, 153, 0.3); }
+        .btn-camera:hover { background-color: #EC4899; color: white; }
+
+        .btn-gallery { background-color: rgba(59, 130, 246, 0.15); color: #3B82F6; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .btn-gallery:hover { background-color: #3B82F6; color: white; }
         
         .booking-card {
             background: #030712; 
@@ -271,55 +278,68 @@
     <div id="secretaryScreen" class="card hidden">
         <div id="welcomeSec" style="color: var(--success); font-weight: 600; margin-bottom: 16px; text-align: center; font-size: 14px;"></div>
         
-        <button onclick="showScreen('secretaryReviewScreen'); loadReviewBookings();" style="background-color: #059669;">📅 سجل الحجوزات الشامل</button>
-        <hr style="border-color: var(--border-color); margin: 20px 0;">
-
-        <label>اختر الطبيب المعالج:</label>
-        <select id="secretaryDoctorSelect" required>
-            <option value="">جاري تحميل الأطباء...</option>
-        </select>
-
-        <h2 id="formTitle" style="text-align: right; font-size: 16px; margin-bottom: 12px;">إدخال حجز جديد</h2>
-        <input type="hidden" id="editBookingKey" value="">
-
-        <label>تاريخ الحجز:</label>
-        <input type="date" id="resDate" required>
-        
-        <label>تسلسل الحجز:</label>
-        <input type="number" id="resSeq" placeholder="مثال: 1" required>
-        
-        <label>وقت الحجز:</label>
-        <input type="time" id="resTime" required>
-        
-        <label>اسم المريض:</label>
-        <input type="text" id="resName" placeholder="الاسم الثلاثي" required>
-        
-        <label>رقم الهاتف:</label>
-        <input type="tel" id="resPhone" placeholder="077...">
-        
-        <label>ملاحظات الحجز:</label>
-        <input type="text" id="resNotes" placeholder="ملاحظات...">
-        
-        <button onclick="saveBooking()" id="btnSave">حفظ الحجز في السحابة</button>
-        <button id="btnCancelEdit" class="hidden" onclick="cancelEditMode()" style="background-color: #4B5563;">إلغاء التعديل</button>
-        <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
-    </div>
-
-    <!-- شاشة سجل الحجوزات للسكرتير -->
-    <div id="secretaryReviewScreen" class="card hidden">
-        <h2>سجل الحجوزات الشامل</h2>
-        <label>اختر الطبيب:</label>
-        <select id="reviewDoctorSelect" onchange="loadReviewBookings()">
-            <option value="">اختر الطبيب لعرض السجل...</option>
-        </select>
-        <div class="doctor-date-picker">
-            <label>التاريخ:</label>
-            <input type="date" id="secReviewDateFilter" onchange="loadReviewBookings()">
+        <div class="doctor-tabs">
+            <button id="tabSecAddBtn" class="tab-btn active" onclick="switchSecretaryTab('add')">➕ حجز جديد</button>
+            <button id="tabSecQueueBtn" class="tab-btn" onclick="switchSecretaryTab('queue')">🩺 الطابور الحالي</button>
+            <button id="tabSecReviewBtn" class="tab-btn" onclick="switchSecretaryTab('review')">📅 السجل</button>
         </div>
-        <input type="text" id="secSearchInput" placeholder="🔍 ابحث بالاسم، التسلسل..." oninput="filterSecretaryBookings()">
-        <div id="secretaryCounter" class="records-counter">📊 إجمالي الحجوزات: 0</div>
-        <div id="reviewBookingsList"></div>
-        <button onclick="showScreen('secretaryScreen')" style="background-color: var(--primary); margin-top: 16px;">➕ العودة لشاشة الحجز</button>
+
+        <div id="secAddTabContent">
+            <label>اختر الطبيب المعالج:</label>
+            <select id="secretaryDoctorSelect" onchange="onSecretaryDoctorChanged()" required>
+                <option value="">جاري تحميل الأطباء...</option>
+            </select>
+
+            <h2 id="formTitle" style="text-align: right; font-size: 16px; margin-bottom: 12px;">إدخال حجز جديد</h2>
+            <input type="hidden" id="editBookingKey" value="">
+
+            <label>تاريخ الحجز:</label>
+            <input type="date" id="resDate" onchange="onSecretaryDoctorChanged()" required>
+            
+            <label>تسلسل الحجز:</label>
+            <input type="number" id="resSeq" placeholder="مثال: 1" required>
+            
+            <label>وقت الحجز:</label>
+            <input type="time" id="resTime" required>
+            
+            <label>اسم المريض:</label>
+            <input type="text" id="resName" placeholder="الاسم الثلاثي" required>
+            
+            <label>رقم الهاتف:</label>
+            <input type="tel" id="resPhone" placeholder="077...">
+            
+            <label>ملاحظات الحجز:</label>
+            <input type="text" id="resNotes" placeholder="ملاحظات...">
+            
+            <button onclick="saveBooking()" id="btnSave">حفظ الحجز في السحابة</button>
+            <button id="btnCancelEdit" class="hidden" onclick="cancelEditMode()" style="background-color: #4B5563;">إلغاء التعديل</button>
+        </div>
+
+        <div id="secQueueTabContent" class="hidden">
+            <h2>طابور العيادة الحالي</h2>
+            <input type="text" id="secQueueSearchInput" placeholder="🔍 ابحث في الطابور بالاسم أو التسلسل..." oninput="filterSecretaryQueue()">
+            <div class="queue-stats-header">
+                <div id="secQueueCountBox" class="queue-stat-box neon-records">المراجعين: 0</div>
+                <div id="secQueueTotalBox" class="queue-stat-box neon-money">المبالغ: 0 د.ع</div>
+            </div>
+            <div id="secQueueList"></div>
+        </div>
+
+        <div id="secReviewTabContent" class="hidden">
+            <h2>سجل الحجوزات الشامل</h2>
+            <label>اختر الطبيب:</label>
+            <select id="reviewDoctorSelect" onchange="loadReviewBookings()">
+                <option value="">اختر الطبيب لعرض السجل...</option>
+            </select>
+            <div class="doctor-date-picker">
+                <label>التاريخ:</label>
+                <input type="date" id="secReviewDateFilter" onchange="loadReviewBookings()">
+            </div>
+            <input type="text" id="secSearchInput" placeholder="🔍 ابحث بالاسم، التسلسل..." oninput="filterSecretaryBookings()">
+            <div id="secretaryCounter" class="records-counter">📊 إجمالي الحجوزات: 0</div>
+            <div id="reviewBookingsList"></div>
+        </div>
+
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
     </div>
 
@@ -357,6 +377,10 @@
     </div>
 
 </div>
+
+<!-- نوافذ الإدخال المخفية للرفع المباشر (كاميرا أو ملفات) -->
+<input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelected(event)">
+<input type="file" id="galleryInput" accept="image/*,application/pdf" class="hidden" onchange="handleFileSelected(event)">
 
 <!-- نافذة منبثقة لتعديل الحجز مباشرة للطبيب -->
 <div id="doctorEditCard" class="card hidden">
@@ -401,6 +425,8 @@
     let doctorAllBookings = [];
     let clinicDoctorsList = {};
     let doctorQueueItems = [];
+    let secretaryQueueItems = [];
+    let activeUploadVisitId = null;
 
     function formatTimeTo12Hour(timeStr) {
         if (!timeStr) return "---";
@@ -531,7 +557,7 @@
     }
 
     window.showScreen = function(screenId) {
-        ['loginScreen', 'secretaryScreen', 'secretaryReviewScreen', 'doctorScreen'].forEach(id => document.getElementById(id).classList.add('hidden'));
+        ['loginScreen', 'secretaryScreen', 'doctorScreen'].forEach(id => document.getElementById(id).classList.add('hidden'));
         document.getElementById(screenId).classList.remove('hidden');
     }
 
@@ -552,6 +578,36 @@
             bookingsBtn.classList.remove('active');
             queueBtn.classList.add('active');
             loadDoctorQueue();
+        }
+    }
+
+    window.switchSecretaryTab = function(tabName) {
+        const addTab = document.getElementById('secAddTabContent');
+        const queueTab = document.getElementById('secQueueTabContent');
+        const reviewTab = document.getElementById('secReviewTabContent');
+        
+        const addBtn = document.getElementById('tabSecAddBtn');
+        const queueBtn = document.getElementById('tabSecQueueBtn');
+        const reviewBtn = document.getElementById('tabSecReviewBtn');
+
+        addTab.classList.add('hidden');
+        queueTab.classList.add('hidden');
+        reviewTab.classList.add('hidden');
+        addBtn.classList.remove('active');
+        queueBtn.classList.remove('active');
+        reviewBtn.classList.remove('active');
+
+        if (tabName === 'add') {
+            addTab.classList.remove('hidden');
+            addBtn.classList.add('active');
+        } else if (tabName === 'queue') {
+            queueTab.classList.remove('hidden');
+            queueBtn.classList.add('active');
+            loadSecretaryQueue();
+        } else if (tabName === 'review') {
+            reviewTab.classList.remove('hidden');
+            reviewBtn.classList.add('active');
+            loadReviewBookings();
         }
     }
 
@@ -713,7 +769,7 @@
                 const data = snapshot.val();
                 for(let k in data) doctorQueueItems.push(data[k]);
             }
-            renderQueueList(doctorQueueItems);
+            renderQueueList(doctorQueueItems, 'queueList', 'queueTotalBox', 'queueCountBox', false);
         });
     }
 
@@ -724,13 +780,47 @@
             const seqMatch = item.sequence && item.sequence.toString().includes(query);
             return !query || nameMatch || seqMatch;
         });
-        renderQueueList(filtered);
+        renderQueueList(filtered, 'queueList', 'queueTotalBox', 'queueCountBox', false);
     }
 
-    window.renderQueueList = function(items) {
-        const queueListDiv = document.getElementById('queueList');
-        const totalBoxDiv = document.getElementById('queueTotalBox');
-        const countBoxDiv = document.getElementById('queueCountBox');
+    window.onSecretaryDoctorChanged = function() {
+        const secQueueTab = document.getElementById('secQueueTabContent');
+        if (!secQueueTab.classList.contains('hidden')) {
+            loadSecretaryQueue();
+        }
+    }
+
+    window.loadSecretaryQueue = function() {
+        const docId = document.getElementById('secretaryDoctorSelect').value;
+        if(!docId) {
+            document.getElementById('secQueueList').innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:24px;">يرجى اختيار الطبيب أولاً لعرض الطابور.</div>`;
+            return;
+        }
+
+        onValue(ref(db, `ClinicQueue/${CLINIC_CODE}/${docId}`), (snapshot) => {
+            secretaryQueueItems = [];
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                for(let k in data) secretaryQueueItems.push(data[k]);
+            }
+            renderQueueList(secretaryQueueItems, 'secQueueList', 'secQueueTotalBox', 'secQueueCountBox', true);
+        });
+    }
+
+    window.filterSecretaryQueue = function() {
+        const query = document.getElementById('secQueueSearchInput').value.toLowerCase().trim();
+        let filtered = secretaryQueueItems.filter(item => {
+            const nameMatch = item.patientName && item.patientName.toLowerCase().includes(query);
+            const seqMatch = item.sequence && item.sequence.toString().includes(query);
+            return !query || nameMatch || seqMatch;
+        });
+        renderQueueList(filtered, 'secQueueList', 'secQueueTotalBox', 'secQueueCountBox', true);
+    }
+
+    window.renderQueueList = function(items, listContainerId, totalBoxId, countBoxId, showUploadBtn) {
+        const queueListDiv = document.getElementById(listContainerId);
+        const totalBoxDiv = document.getElementById(totalBoxId);
+        const countBoxDiv = document.getElementById(countBoxId);
         queueListDiv.innerHTML = '';
         
         let totalAmount = 0;
@@ -741,20 +831,70 @@
                 let price = parseFloat(item.payAmount) || 0;
                 totalAmount += price;
 
+                let uploadBtnsHtml = '';
+                if (showUploadBtn && item.visitID) {
+                    uploadBtnsHtml = `
+                    <div class="patient-actions">
+                        <button class="action-icon-btn btn-camera" onclick="openCameraUpload(${item.visitID})">📷 التقاط كاميرا</button>
+                        <button class="action-icon-btn btn-gallery" onclick="openGalleryUpload(${item.visitID})">📁 ملفات الهاتف</button>
+                    </div>`;
+                }
+
                 queueListDiv.innerHTML += `
                 <div class="booking-card" style="border-right-color: var(--success);">
                     <div class="seq"><span>تسلسل الحجز: ${item.sequence || 'غير متوفر'}</span></div>
                     <div style="font-weight: 600; margin-bottom: 4px;">👤 اسم المريض: ${item.patientName}</div>
                     <div style="color: var(--success); font-weight: 700;">💰 المبلغ: ${price.toLocaleString()} د.ع</div>
                     <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">📋 تفاصيل الدفع: ${item.paymentDetails || 'كشفية عادية'}</div>
+                    ${uploadBtnsHtml}
                 </div>`;
             });
         } else {
             queueListDiv.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:24px;">لا يوجد مراجعين مطابقين في الطابور.</div>`;
         }
 
-        countBoxDiv.innerText = `المراجعين: ${totalRecords}`;
-        totalBoxDiv.innerText = `المبالغ: ${totalAmount.toLocaleString()} د.ع`;
+        if (countBoxDiv) countBoxDiv.innerText = `المراجعين: ${totalRecords}`;
+        if (totalBoxDiv) totalBoxDiv.innerText = `المبالغ: ${totalAmount.toLocaleString()} د.ع`;
+    }
+
+    // فتح الكاميرا المباشرة
+    window.openCameraUpload = function(visitId) {
+        activeUploadVisitId = visitId;
+        document.getElementById('cameraInput').click();
+    }
+
+    // فتح استعراض الملفات والذاكرة
+    window.openGalleryUpload = function(visitId) {
+        activeUploadVisitId = visitId;
+        document.getElementById('galleryInput').click();
+    }
+
+    // معالجة الملف المختار ورفعه لـ Firebase
+    window.handleFileSelected = async function(event) {
+        const file = event.target.files[0];
+        if (!file || !activeUploadVisitId) return;
+
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const base64String = e.target.result;
+            const imageName = file.name || "Lab_Document.jpg";
+            const uploadDate = new Date().toISOString().split('T')[0];
+
+            try {
+                const imgRef = ref(db, `MedicalImages/${CLINIC_CODE}/${activeUploadVisitId}`);
+                await push(imgRef, {
+                    imageName: imageName,
+                    imageUrl: base64String,
+                    uploadDate: uploadDate,
+                    timestamp: Date.now()
+                });
+                alert("✔ تم رفع الصورة/الملف بنجاح وسيظهر لدى الطبيب فوراً!");
+            } catch (err) {
+                alert("❌ فشل رفع الملف: " + err.message);
+            }
+            event.target.value = '';
+        };
+        reader.readAsDataURL(file);
     }
 
     window.saveBooking = async function() {
@@ -899,7 +1039,7 @@
         document.getElementById('btnSave').innerText = "حفظ التعديلات";
         document.getElementById('btnCancelEdit').classList.remove('hidden');
 
-        showScreen('secretaryScreen');
+        switchSecretaryTab('add');
     }
 
     window.cancelEditMode = function() {
