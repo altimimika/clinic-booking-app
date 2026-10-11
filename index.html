@@ -37,7 +37,7 @@
             justify-content: center;
         }
 
-        .container { width: 100%; max-width: 480px; margin: 0 auto; }
+        .container { width: 100%; max-width: 480px; margin: 0 auto; padding-bottom: 40px; }
 
         .card {
             background-color: var(--card-bg); 
@@ -154,9 +154,49 @@
             z-index: 9999; border: 1px solid var(--primary); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); opacity: 0; visibility: hidden; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         #doctorEditCard:not(.hidden) { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); }
+
+        /* --- 🌟 تصميم إشعارات التوست والنوافذ المخصصة 🌟 --- */
+        #customToast {
+            visibility: hidden; min-width: 250px; background-color: var(--success); color: white;
+            text-align: center; border-radius: var(--radius-md); padding: 16px; position: fixed;
+            z-index: 10000; left: 50%; bottom: 30px; transform: translateX(-50%);
+            font-size: 14px; font-weight: 600; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            transition: visibility 0s, opacity 0.4s, bottom 0.4s; opacity: 0;
+        }
+        #customToast.show { visibility: visible; opacity: 1; bottom: 50px; }
+        #customToast.error { background-color: var(--danger); }
+
+        #customConfirmOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6);
+            z-index: 10001; display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; transition: var(--transition);
+        }
+        #customConfirmOverlay.show { opacity: 1; visibility: visible; }
+        .confirm-box {
+            background: var(--card-bg); padding: 24px; border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color); text-align: center; width: 90%; max-width: 350px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        }
+        .confirm-box p { margin: 0 0 20px 0; font-size: 16px; font-weight: 600; color: var(--text-main); }
+        .confirm-btns { display: flex; gap: 10px; }
+        .confirm-btns button { margin: 0; }
     </style>
 </head>
 <body>
+
+<!-- 🌟 عنصر الإشعار التوست 🌟 -->
+<div id="customToast">تمت العملية بنجاح!</div>
+
+<!-- 🌟 عنصر نافذة التأكيد المخصصة 🌟 -->
+<div id="customConfirmOverlay">
+    <div class="confirm-box">
+        <p id="confirmMessage">هل أنت متأكد من تنفيذ هذا الإجراء؟</p>
+        <div class="confirm-btns">
+            <button id="btnConfirmYes" style="background-color: var(--danger);">نعم، متأكد</button>
+            <button id="btnConfirmNo" style="background-color: #374151;">إلغاء</button>
+        </div>
+    </div>
+</div>
 
 <div class="container">
     
@@ -330,6 +370,30 @@
     let secretaryQueueItems = [];
     let activeUploadVisitId = null;
 
+    // 🌟 دوال مساعدة للإشعارات والنوافذ المخصصة 🌟
+    window.showToast = function(message, isError = false) {
+        const toast = document.getElementById("customToast");
+        toast.innerText = message;
+        toast.className = isError ? "show error" : "show";
+        setTimeout(function() {
+            toast.className = toast.className.replace("show", "");
+        }, 3000);
+    }
+
+    window.showConfirm = function(message, onConfirm) {
+        const overlay = document.getElementById('customConfirmOverlay');
+        document.getElementById('confirmMessage').innerText = message;
+        overlay.classList.add('show');
+
+        document.getElementById('btnConfirmYes').onclick = function() {
+            overlay.classList.remove('show');
+            onConfirm();
+        };
+        document.getElementById('btnConfirmNo').onclick = function() {
+            overlay.classList.remove('show');
+        };
+    }
+
     function formatTimeTo12Hour(timeStr) {
         if (!timeStr) return "---";
         let cleanTime = timeStr.trim();
@@ -369,7 +433,7 @@
         const pInput = document.getElementById('loginPassword').value.trim();
 
         if (!clinicCodeInput || !uInput || !pInput) {
-            alert("يرجى إدخال رمز العيادة، اسم المستخدم وكلمة المرور!");
+            showToast("يرجى إدخال رمز العيادة، اسم المستخدم وكلمة المرور!", true);
             return;
         }
 
@@ -401,9 +465,9 @@
                         showScreen('secretaryScreen'); 
                         loadDoctorsListForSecretary(users);
                     }
-                } else { alert("❌ بيانات الدخول غير صحيحة!"); }
-            } else { alert("❌ رمز العيادة غير صحيح!"); }
-        } catch (error) { alert("خطأ في الاتصال: " + error.message); }
+                } else { showToast("❌ بيانات الدخول غير صحيحة!", true); }
+            } else { showToast("❌ رمز العيادة غير صحيح!", true); }
+        } catch (error) { showToast("خطأ في الاتصال: " + error.message, true); }
     }
 
     window.checkAutoLogin = async function() {
@@ -448,7 +512,6 @@
                 secSelect.innerHTML += `<option value="${user.DoctorID}">${user.FullName}</option>`;
             }
         }
-        // اختيار أول طبيب تلقائياً إن وجد لتنشيط البيانات
         if (secSelect.options.length > 1) {
             secSelect.selectedIndex = 1;
             onSecretaryDoctorChanged();
@@ -629,7 +692,7 @@
         const notes = document.getElementById('docEditNotes').value.trim();
 
         if(!docId || !date || !seq || !rawTime || !name) {
-            alert("يرجى ملء الحقول الإجبارية!");
+            showToast("يرجى ملء الحقول الإجبارية!", true);
             return;
         }
 
@@ -639,7 +702,7 @@
                 const bookingsData = dateSnapshot.val();
                 for (let key in bookingsData) {
                     if (String(bookingsData[key].sequence) === String(seq) && key !== editKey) {
-                        alert(`❌ خطأ: رقم التسلسل (${seq}) محجوز مسبقاً لهذا التاريخ!`);
+                        showToast(`❌ خطأ: رقم التسلسل (${seq}) محجوز مسبقاً لهذا التاريخ!`, true);
                         return;
                     }
                 }
@@ -656,10 +719,10 @@
             };
 
             await update(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}/${editKey}`), bookingData);
-            alert("✅ تم تعديل الحجز بنجاح!");
+            showToast("✅ تم تعديل الحجز بنجاح!");
             closeDoctorEditModal();
         } catch (e) {
-            alert("خطأ أثناء التعديل: " + e.message);
+            showToast("خطأ أثناء التعديل: " + e.message, true);
         }
     }
 
@@ -673,7 +736,6 @@
                 const data = snapshot.val();
                 for(let k in data) doctorQueueItems.push(data[k]);
             }
-            // تمرير true لتفعيل إظهار أزرار الرفع لطابور الطبيب أيضاً
             renderQueueList(doctorQueueItems, 'queueList', 'queueTotalBox', 'queueCountBox', true);
         });
     }
@@ -693,7 +755,6 @@
         if (!secQueueTab.classList.contains('hidden')) {
             loadSecretaryQueue();
         }
-        // تحديث السجل تلقائياً أيضاً
         loadReviewBookings();
     }
 
@@ -739,16 +800,16 @@
                 totalAmount += price;
 
                 let uploadBtnsHtml = '';
-                // 🛑 استخدام visitID لرفع الصورة بشكل دقيق، ولا نعرضه في الواجهة (مخفي برمجياً)
-                if (showUploadBtn && item.visitID) {
+                let uniqueIdForUpload = item.visitID || item.sequence || item.patientID;
+
+                if (showUploadBtn && uniqueIdForUpload) {
                     uploadBtnsHtml = `
                     <div class="patient-actions">
-                        <button class="action-icon-btn btn-camera" onclick="openCameraUpload(${item.visitID})">📷 التقاط كاميرا</button>
-                        <button class="action-icon-btn btn-gallery" onclick="openGalleryUpload(${item.visitID})">📁 ملفات الهاتف</button>
+                        <button class="action-icon-btn btn-camera" onclick="openCameraUpload('${uniqueIdForUpload}')">📷 التقاط كاميرا</button>
+                        <button class="action-icon-btn btn-gallery" onclick="openGalleryUpload('${uniqueIdForUpload}')">📁 ملفات الهاتف</button>
                     </div>`;
                 }
 
-                // 🛑 تم إخفاء الـ patientID والـ visitID من الظهور هنا، لكننا نستخدمهم في الكود أعلاه ☝️
                 queueListDiv.innerHTML += `
                 <div class="booking-card" style="border-right-color: var(--success);">
                     <div class="seq"><span>تسلسل الحجز: ${item.sequence || 'غير متوفر'}</span></div>
@@ -766,30 +827,27 @@
         if (totalBoxDiv) totalBoxDiv.innerText = `المبالغ: ${totalAmount.toLocaleString()} د.ع`;
     }
 
-    // فتح الكاميرا المباشرة
     window.openCameraUpload = function(visitId) {
         activeUploadVisitId = visitId;
         document.getElementById('cameraInput').click();
     }
 
-    // فتح استعراض الملفات والذاكرة
     window.openGalleryUpload = function(visitId) {
         activeUploadVisitId = visitId;
         document.getElementById('galleryInput').click();
     }
 
-    // معالجة الملف المختار ورفعه لـ Firebase
     window.handleFileSelected = async function(event) {
         const file = event.target.files[0];
         if (!file || !activeUploadVisitId) return;
 
-        // 🛑 إضافة قيد الحجم الأقصى (5 ميجابايت) لحماية التطبيق وباقة فايربيس
+        // 🛑 إضافة قيد الحجم الأقصى (5 ميجابايت)
         const maxSizeInMB = 5;
         const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
         
         if (file.size > maxSizeInBytes) {
-            alert(`❌ عذراً، حجم الملف كبير جداً! الحد الأقصى المسموح به هو ${maxSizeInMB} ميجابايت.\nحجم الملف الحالي: ${(file.size / (1024 * 1024)).toFixed(2)} ميجابايت.`);
-            event.target.value = ''; // تفريغ الاختيار ليتمكن المستخدم من اختيار ملف آخر
+            showToast(`❌ حجم الملف كبير! الحد الأقصى هو ${maxSizeInMB} ميجابايت.`, true);
+            event.target.value = ''; 
             return;
         }
 
@@ -807,9 +865,9 @@
                     uploadDate: uploadDate,
                     timestamp: Date.now()
                 });
-                alert("✔ تم رفع الصورة/الملف بنجاح وسيظهر لدى الطبيب فوراً!");
+                showToast("✔ تم رفع الصورة/الملف بنجاح وسيظهر لدى الطبيب فوراً!");
             } catch (err) {
-                alert("❌ فشل رفع الملف: " + err.message);
+                showToast("❌ فشل رفع الملف: " + err.message, true);
             }
             event.target.value = '';
         };
@@ -828,7 +886,7 @@
         const editKey = document.getElementById('editBookingKey').value;
 
         if(!docId || !date || !seq || !rawTime || !name) {
-            alert("يرجى ملء الحقول الإجبارية واختيار الطبيب من أعلى الصفحة!");
+            showToast("يرجى ملء الحقول الإجبارية واختيار الطبيب!", true);
             return;
         }
 
@@ -838,7 +896,7 @@
                 const bookingsData = dateSnapshot.val();
                 for (let key in bookingsData) {
                     if (String(bookingsData[key].sequence) === String(seq) && key !== editKey) {
-                        alert(`❌ خطأ: رقم التسلسل (${seq}) محجوز مسبقاً لهذا التاريخ! يرجى اختيار تسلسل آخر.`);
+                        showToast(`❌ خطأ: رقم التسلسل (${seq}) محجوز مسبقاً!`, true);
                         return;
                     }
                 }
@@ -857,18 +915,18 @@
 
             if (editKey) {
                 await update(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}/${editKey}`), bookingData);
-                alert("✅ تم تحديث الحجز بنجاح!");
+                showToast("✅ تم تحديث الحجز بنجاح!");
                 cancelEditMode();
             } else {
                 await push(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}`), bookingData);
-                alert("✅ تم حفظ الحجز بنجاح!");
+                showToast("✅ تم حفظ الحجز بنجاح!");
                 document.getElementById('resName').value = '';
                 document.getElementById('resPhone').value = '';
                 document.getElementById('resNotes').value = '';
                 document.getElementById('resSeq').value = parseInt(seq) + 1;
             }
         } catch (e) {
-            alert("خطأ أثناء الحفظ: " + e.message);
+            showToast("خطأ أثناء الحفظ: " + e.message, true);
         }
     }
 
@@ -972,28 +1030,31 @@
     }
 
     window.deleteBooking = async function(bookingId) {
-        if (!confirm("هل أنت متأكد من حذف هذا الحجز؟")) return;
-        const docId = document.getElementById('secretaryDoctorSelect').value;
-        const date = document.getElementById('secReviewDateFilter').value;
+        showConfirm("هل أنت متأكد من حذف هذا الحجز نهائياً؟", async function() {
+            const docId = document.getElementById('secretaryDoctorSelect').value;
+            const date = document.getElementById('secReviewDateFilter').value;
 
-        try {
-            await remove(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}/${bookingId}`));
-            alert("🗑️ تم حذف الحجز بنجاح!");
-        } catch (e) {
-            alert("خطأ أثناء الحذف: " + e.message);
-        }
+            try {
+                await remove(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}/${bookingId}`));
+                showToast("🗑️ تم حذف الحجز بنجاح!");
+            } catch (e) {
+                showToast("خطأ أثناء الحذف: " + e.message, true);
+            }
+        });
     }
 
     window.deleteBookingFromDoctor = async function(bookingId) {
-        if (!confirm("هل أنت متأكد من حذف هذا الحجز؟")) return;
-        const docId = localStorage.getItem('doctorId');
-        const date = document.getElementById('doctorDateFilter').value;
+        showConfirm("هل أنت متأكد من حذف هذا الحجز نهائياً؟", async function() {
+            const docId = localStorage.getItem('doctorId');
+            const date = document.getElementById('doctorDateFilter').value;
 
-        try {
-            await remove(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}/${bookingId}`));
-        } catch (e) {
-            alert("خطأ أثناء الحذف: " + e.message);
-        }
+            try {
+                await remove(ref(db, `Bookings/${CLINIC_CODE}/${docId}/${date}/${bookingId}`));
+                showToast("🗑️ تم حذف الحجز بنجاح!");
+            } catch (e) {
+                showToast("خطأ أثناء الحذف: " + e.message, true);
+            }
+        });
     }
 </script>
 </body>
