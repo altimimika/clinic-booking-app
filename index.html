@@ -23,9 +23,7 @@
             --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             font-family: 'Tajawal', 'Plus Jakarta Sans', sans-serif;
@@ -39,11 +37,7 @@
             justify-content: center;
         }
 
-        .container { 
-            width: 100%; 
-            max-width: 480px; 
-            margin: 0 auto; 
-        }
+        .container { width: 100%; max-width: 480px; margin: 0 auto; }
 
         .card {
             background-color: var(--card-bg); 
@@ -61,109 +55,54 @@
         }
         
         h2 { 
-            text-align: center; 
-            color: var(--text-main); 
-            font-size: 20px;
-            font-weight: 700;
-            margin-top: 0; 
-            margin-bottom: 20px;
-            letter-spacing: -0.5px;
+            text-align: center; color: var(--text-main); font-size: 20px; font-weight: 700;
+            margin-top: 0; margin-bottom: 20px; letter-spacing: -0.5px;
         }
         
         .logo-placeholder {
-            width: 64px; height: 64px; 
-            background: linear-gradient(135deg, #4F46E5, #3B82F6); 
-            border-radius: 20px; 
-            margin: 0 auto 16px; 
-            display: flex; align-items: center; justify-content: center;
-            font-size: 28px; 
-            box-shadow: 0 8px 16px rgba(79, 70, 229, 0.3);
+            width: 64px; height: 64px; background: linear-gradient(135deg, #4F46E5, #3B82F6); 
+            border-radius: 20px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;
+            font-size: 28px; box-shadow: 0 8px 16px rgba(79, 70, 229, 0.3);
         }
         
-        label { 
-            display: block; 
-            margin-bottom: 6px; 
-            font-weight: 600; 
-            color: var(--text-muted); 
-            font-size: 13px;
-        }
+        label { display: block; margin-bottom: 6px; font-weight: 600; color: var(--text-muted); font-size: 13px; }
 
         input, select, textarea {
-            width: 100%; 
-            padding: 12px 16px; 
-            margin-bottom: 16px;
-            border: 1px solid var(--border-color); 
-            border-radius: var(--radius-md);
-            background-color: #030712; 
-            color: white; 
-            font-size: 14px;
-            font-family: inherit;
-            transition: var(--transition);
+            width: 100%; padding: 12px 16px; margin-bottom: 16px;
+            border: 1px solid var(--border-color); border-radius: var(--radius-md);
+            background-color: #030712; color: white; font-size: 14px; font-family: inherit; transition: var(--transition);
         }
 
         input:focus, select:focus, textarea:focus { 
-            border-color: var(--primary); 
-            outline: none; 
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+            border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
         }
         
         button {
-            width: 100%; 
-            padding: 13px; 
-            background-color: var(--primary);
-            color: white; 
-            border: none; 
-            border-radius: var(--radius-md);
-            font-size: 15px; 
-            font-weight: 600; 
-            font-family: inherit;
-            cursor: pointer; 
-            transition: var(--transition); 
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            width: 100%; padding: 13px; background-color: var(--primary); color: white; 
+            border: none; border-radius: var(--radius-md); font-size: 15px; font-weight: 600; font-family: inherit;
+            cursor: pointer; transition: var(--transition); margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;
         }
 
-        button:hover {
-            background-color: var(--primary-hover);
-        }
+        button:hover { background-color: var(--primary-hover); }
+        button:active { transform: scale(0.98); }
 
-        button:active { 
-            transform: scale(0.98); 
-        }
-
-        button.logout-btn { 
-            background-color: #1F2937; 
-            color: var(--text-muted);
-            margin-top: 12px; 
-        }
-        button.logout-btn:hover {
-            background-color: #374151;
-            color: white;
-        }
+        button.logout-btn { background-color: #1F2937; color: var(--text-muted); margin-top: 12px; }
+        button.logout-btn:hover { background-color: #374151; color: white; }
         
         .doctor-tabs {
-            display: flex; gap: 6px; margin-bottom: 20px; 
-            background: #030712; padding: 4px; border-radius: var(--radius-md);
-            border: 1px solid var(--border-color);
+            display: flex; gap: 6px; margin-bottom: 20px; background: #030712; padding: 4px; border-radius: var(--radius-md); border: 1px solid var(--border-color);
         }
         .tab-btn {
             flex: 1; padding: 10px; background: transparent; border: none; border-radius: 8px;
             color: var(--text-muted); font-weight: 600; font-size: 13px; cursor: pointer; transition: var(--transition); margin: 0;
         }
-        .tab-btn.active {
-            background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
-        }
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4); }
 
         .patient-actions {
-            display: flex; gap: 6px; margin-top: 14px; border-top: 1px solid var(--border-color); padding-top: 12px;
-            flex-wrap: wrap;
+            display: flex; gap: 6px; margin-top: 14px; border-top: 1px solid var(--border-color); padding-top: 12px; flex-wrap: wrap;
         }
         .action-icon-btn {
-            flex: 1; min-width: 90px; padding: 8px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; color: white; margin: 0;
-            transition: var(--transition);
+            flex: 1; min-width: 90px; padding: 8px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; color: white; margin: 0; transition: var(--transition);
         }
         .btn-call { background-color: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
         .btn-call:hover { background-color: var(--success); color: white; }
@@ -181,76 +120,40 @@
         .btn-gallery:hover { background-color: #3B82F6; color: white; }
         
         .booking-card {
-            background: #030712; 
-            border: 1px solid var(--border-color);
-            border-right: 4px solid var(--primary);
-            padding: 16px; 
-            border-radius: var(--radius-md); 
-            margin-bottom: 12px;
-            transition: var(--transition);
+            background: #030712; border: 1px solid var(--border-color); border-right: 4px solid var(--primary);
+            padding: 16px; border-radius: var(--radius-md); margin-bottom: 12px; transition: var(--transition);
         }
-        .booking-card:hover {
-            border-color: #374151;
-            transform: translateY(-2px);
-        }
+        .booking-card:hover { border-color: #374151; transform: translateY(-2px); }
         .booking-card .seq { color: var(--text-main); font-size: 15px; font-weight: 700; margin-bottom: 6px; display: flex; justify-content: space-between;}
         
-        .status-badge {
-            display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 6px; font-size: 11px; margin-top: 8px; font-weight: 600; color: white;
-        }
+        .status-badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 6px; font-size: 11px; margin-top: 8px; font-weight: 600; color: white; }
         
         .records-counter {
             background: #030712; border: 1px solid var(--border-color); padding: 12px;
-            border-radius: var(--radius-md); margin-bottom: 16px; font-weight: 600; text-align: center;
-            color: var(--success); font-size: 14px;
+            border-radius: var(--radius-md); margin-bottom: 16px; font-weight: 600; text-align: center; color: var(--success); font-size: 14px;
         }
 
-        .queue-stats-header {
-            display: flex; gap: 10px; margin-bottom: 20px;
-        }
+        .queue-stats-header { display: flex; gap: 10px; margin-bottom: 20px; }
         .queue-stat-box {
             flex: 1; background: #030712; padding: 14px; border: 1px solid var(--border-color);
             border-radius: var(--radius-md); text-align: center; font-weight: 700; font-size: 15px;
         }
-        .neon-records {
-            border-color: rgba(245, 158, 11, 0.4);
-            color: var(--warning);
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), transparent);
-        }
-        .neon-money {
-            border-color: rgba(16, 185, 129, 0.4);
-            color: var(--success);
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), transparent);
-        }
+        .neon-records { border-color: rgba(245, 158, 11, 0.4); color: var(--warning); background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), transparent); }
+        .neon-money { border-color: rgba(16, 185, 129, 0.4); color: var(--success); background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), transparent); }
 
         .hidden { display: none !important; }
         
         .doctor-date-picker {
-            display: flex; align-items: center; justify-content: space-between;
-            background: #030712; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md); margin-bottom: 16px;
+            display: flex; align-items: center; justify-content: space-between; background: #030712; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md); margin-bottom: 16px;
         }
         .doctor-date-picker label { margin-bottom: 0; color: var(--primary); font-weight: 700; }
         .doctor-date-picker input, .doctor-date-picker select { width: auto; margin-bottom: 0; padding: 6px 10px; border: 1px solid var(--border-color); background: var(--card-bg); }
 
         #doctorEditCard {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.95);
-            width: 92%;
-            max-width: 440px;
-            z-index: 9999;
-            border: 1px solid var(--primary);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95); width: 92%; max-width: 440px;
+            z-index: 9999; border: 1px solid var(--primary); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); opacity: 0; visibility: hidden; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        #doctorEditCard:not(.hidden) {
-            opacity: 1;
-            visibility: visible;
-            transform: translate(-50%, -50%) scale(1);
-        }
+        #doctorEditCard:not(.hidden) { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); }
     </style>
 </head>
 <body>
@@ -835,6 +738,7 @@
                 totalAmount += price;
 
                 let uploadBtnsHtml = '';
+                // 🛑 استخدام visitID لرفع الصورة بشكل دقيق، ولا نعرضه في الواجهة (مخفي برمجياً)
                 if (showUploadBtn && item.visitID) {
                     uploadBtnsHtml = `
                     <div class="patient-actions">
@@ -843,6 +747,7 @@
                     </div>`;
                 }
 
+                // 🛑 تم إخفاء الـ patientID والـ visitID من الظهور هنا، لكننا نستخدمهم في الكود أعلاه ☝️
                 queueListDiv.innerHTML += `
                 <div class="booking-card" style="border-right-color: var(--success);">
                     <div class="seq"><span>تسلسل الحجز: ${item.sequence || 'غير متوفر'}</span></div>
