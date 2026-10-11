@@ -276,8 +276,16 @@
 
     <!-- شاشة السكرتير أو الإدارة -->
     <div id="secretaryScreen" class="card hidden">
-        <div id="welcomeSec" style="color: var(--success); font-weight: 600; margin-bottom: 16px; text-align: center; font-size: 14px;"></div>
+        <div id="welcomeSec" style="color: var(--success); font-weight: 600; margin-bottom: 12px; text-align: center; font-size: 14px;"></div>
         
+        <!-- اختيار الطبيب في أعلى الصفحة ليفرض نفسه على جميع التبويبات -->
+        <div style="background: #030712; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-md); margin-bottom: 16px;">
+            <label style="color: var(--primary);">اختر الطبيب المعالج (أساسي):</label>
+            <select id="secretaryDoctorSelect" onchange="onSecretaryDoctorChanged()" required style="margin-bottom: 0;">
+                <option value="">جاري تحميل الأطباء...</option>
+            </select>
+        </div>
+
         <div class="doctor-tabs">
             <button id="tabSecAddBtn" class="tab-btn active" onclick="switchSecretaryTab('add')">➕ حجز جديد</button>
             <button id="tabSecQueueBtn" class="tab-btn" onclick="switchSecretaryTab('queue')">🩺 الطابور الحالي</button>
@@ -285,11 +293,6 @@
         </div>
 
         <div id="secAddTabContent">
-            <label>اختر الطبيب المعالج:</label>
-            <select id="secretaryDoctorSelect" onchange="onSecretaryDoctorChanged()" required>
-                <option value="">جاري تحميل الأطباء...</option>
-            </select>
-
             <h2 id="formTitle" style="text-align: right; font-size: 16px; margin-bottom: 12px;">إدخال حجز جديد</h2>
             <input type="hidden" id="editBookingKey" value="">
 
@@ -327,10 +330,6 @@
 
         <div id="secReviewTabContent" class="hidden">
             <h2>سجل الحجوزات الشامل</h2>
-            <label>اختر الطبيب:</label>
-            <select id="reviewDoctorSelect" onchange="loadReviewBookings()">
-                <option value="">اختر الطبيب لعرض السجل...</option>
-            </select>
             <div class="doctor-date-picker">
                 <label>التاريخ:</label>
                 <input type="date" id="secReviewDateFilter" onchange="loadReviewBookings()">
@@ -535,10 +534,8 @@
     window.loadDoctorsListForSecretary = function(usersObj) {
         clinicDoctorsList = usersObj;
         const secSelect = document.getElementById('secretaryDoctorSelect');
-        const reviewSelect = document.getElementById('reviewDoctorSelect');
         
         secSelect.innerHTML = '<option value="">اختر الطبيب المعالج...</option>';
-        reviewSelect.innerHTML = '<option value="">اختر الطبيب لعرض السجل...</option>';
 
         for (let key in usersObj) {
             let user = usersObj[key];
@@ -546,8 +543,12 @@
             
             if (role.includes("طبيب") || role.includes("doctor")) {
                 secSelect.innerHTML += `<option value="${user.DoctorID}">${user.FullName}</option>`;
-                reviewSelect.innerHTML += `<option value="${user.DoctorID}">${user.FullName}</option>`;
             }
+        }
+        // اختيار أول طبيب تلقائياً إن وجد لتنشيط البيانات
+        if (secSelect.options.length > 1) {
+            secSelect.selectedIndex = 1;
+            onSecretaryDoctorChanged();
         }
     }
 
@@ -788,6 +789,8 @@
         if (!secQueueTab.classList.contains('hidden')) {
             loadSecretaryQueue();
         }
+        // تحديث السجل تلقائياً أيضاً
+        loadReviewBookings();
     }
 
     window.loadSecretaryQueue = function() {
@@ -909,7 +912,7 @@
         const editKey = document.getElementById('editBookingKey').value;
 
         if(!docId || !date || !seq || !rawTime || !name) {
-            alert("يرجى ملء الحقول الإجبارية واختيار الطبيب!");
+            alert("يرجى ملء الحقول الإجبارية واختيار الطبيب من أعلى الصفحة!");
             return;
         }
 
@@ -954,7 +957,7 @@
     }
 
     window.loadReviewBookings = function() {
-        const docId = document.getElementById('reviewDoctorSelect').value;
+        const docId = document.getElementById('secretaryDoctorSelect').value;
         const date = document.getElementById('secReviewDateFilter').value;
         if(!docId || !date) return;
 
@@ -986,7 +989,7 @@
             let phoneNum = b.patientPhone || b.phone || '';
             let phoneBtnHtml = phoneNum ? `<button class="action-icon-btn btn-call" onclick="callPatient('${phoneNum}')">📞 اتصال</button>` : '';
             let formattedTime = formatTimeTo12Hour(b.time); 
-            let currentDocId = document.getElementById('reviewDoctorSelect').value;
+            let currentDocId = document.getElementById('secretaryDoctorSelect').value;
             
             listDiv.innerHTML += `
             <div class="booking-card">
@@ -1054,7 +1057,7 @@
 
     window.deleteBooking = async function(bookingId) {
         if (!confirm("هل أنت متأكد من حذف هذا الحجز؟")) return;
-        const docId = document.getElementById('reviewDoctorSelect').value;
+        const docId = document.getElementById('secretaryDoctorSelect').value;
         const date = document.getElementById('secReviewDateFilter').value;
 
         try {
