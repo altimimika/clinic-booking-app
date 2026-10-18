@@ -240,17 +240,22 @@
     </div>
 
     <!-- شاشة المريض (تظهر فقط عند مسح الـ QR) -->
+   <!-- شاشة المريض (تظهر فقط عند مسح الـ QR) -->
     <div id="patientScreen" class="card hidden">
         <div class="logo-placeholder">⚕</div>
         <h2 id="patWelcomeMsg">أهلاً بك في العيادة</h2>
         
         <div id="queueWaitingState">
-            <p style="color: var(--text-muted); font-size: 15px; font-weight: 600;">يتبقى أمامك</p>
+            <p style="color: var(--success); font-size: 16px; font-weight: 700; margin-bottom: 5px;">المتواجدون حالياً قبلك</p>
             <div class="queue-number-box">
                 <span class="queue-number" id="patPersonsAhead">--</span>
                 <span class="queue-label">مراجعين</span>
             </div>
-            <p style="color: var(--warning); font-size: 14px;">يرجى الانتظار، سيتم تحديث هذه الشاشة تلقائياً.</p>
+            
+            <!-- رسالة تحذيرية تظهر فقط إذا كان هناك متأخرون -->
+            <div id="latePatientsWarning" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 10px; margin-top: 15px; display: none;">
+                <p style="color: var(--warning); font-size: 13px; font-weight: 600; margin: 0;">⚠️ ملاحظة: يوجد <span id="lateCountSpan" style="font-weight:bold; font-size:15px;">0</span> مراجعين متأخرين عن دورهم، قد يتم إدخالهم قبلك في حال قدومهم.</p>
+            </div>
         </div>
 
         <div id="queueTurnState" class="hidden">
