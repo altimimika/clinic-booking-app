@@ -273,37 +273,113 @@
         .modern-alert-text { color: #fcd34d; font-size: 13px; font-weight: 600; margin: 0; line-height: 1.6; }
         .modern-alert-text span { color: #ffffff; font-size: 16px; font-weight: 800; margin: 0 4px; }
 
-        /* شبكة معلومات المريض (بطاقات) */
+      /* 🌟 شبكة معلومات المريض (بطاقات احترافية جداً) 🌟 */
         .patient-info-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px;
             width: 100%;
-            margin-top: 15px;
+            margin-top: 20px;
         }
+        
         .info-card {
-            background: rgba(31, 41, 55, 0.6);
-            padding: 18px 12px;
-            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(31, 41, 55, 0.7) 0%, rgba(17, 24, 39, 0.8) 100%);
+            padding: 20px 12px;
+            border-radius: 20px; /* زوايا أكثر نعومة */
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            border: 1px solid rgba(255,255,255,0.05);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.08); /* حدود أنيقة */
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2), inset 0 2px 5px rgba(255,255,255,0.03); /* ظل خارجي وإضاءة داخلية خفيفة */
+            backdrop-filter: blur(12px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
-        .info-card-icon { font-size: 22px; margin-bottom: 8px; opacity: 0.9; }
-        .info-card-label { font-size: 13px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; }
-        .info-card-value { font-size: 15px; color: #ffffff; font-weight: 800; text-align: center; }
-        .seq-value { font-size: 24px; color: var(--primary); text-shadow: 0 2px 8px rgba(79, 70, 229, 0.4); }
 
-        /* الدائرة الخضراء */
-        .queue-number-box.green-turn {
-            background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(11, 15, 25, 0) 70%);
-            border-color: var(--success);
-            box-shadow: 0 0 30px rgba(16, 185, 129, 0.3), inset 0 0 20px rgba(16, 185, 129, 0.2);
+        /* تأثير إضاءة خفيفة عند الحافة العلوية للبطاقة */
+        .info-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 10%; width: 80%; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
         }
+
+        /* تفاعل البطاقة عند اللمس/المرور */
+        .info-card:hover, .info-card:active {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.3), 0 0 15px rgba(79, 70, 229, 0.2);
+            border-color: rgba(79, 70, 229, 0.4);
+        }
+
+        /* الأيقونات بخلفية دائرية متوهجة */
+        .info-card-icon { 
+            font-size: 20px; 
+            margin-bottom: 12px; 
+            background: rgba(255,255,255,0.05);
+            width: 45px; height: 45px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .info-card:hover .info-card-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        /* أيقونة المريض */
+        .icon-user { color: #60A5FA; background: rgba(96, 165, 250, 0.15); box-shadow: 0 0 15px rgba(96, 165, 250, 0.2); }
+        /* أيقونة الرقم */
+        .icon-num { color: #10B981; background: rgba(16, 185, 129, 0.15); box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
+
+        .info-card-label { 
+            font-size: 13px; 
+            color: #9CA3AF; 
+            font-weight: 600; 
+            margin-bottom: 8px; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .info-card-value { 
+            font-size: 16px; 
+            color: #ffffff; 
+            font-weight: 800; 
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        /* 💡 لون رقم الحجز الجديد (أخضر زمردي مشع بدلاً من البنفسجي) */
+        .seq-value { 
+            font-size: 28px; 
+            color: #10B981; /* أخضر زمردي فاقع */
+            text-shadow: 0 2px 10px rgba(16, 185, 129, 0.4); 
+            line-height: 1;
+        }
+
+        /* 🌟 تنسيقات زر ملء الشاشة 🌟 */
+        #fullscreen-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition);
+            z-index: 100;
+        }
+        #fullscreen-btn:hover { background: rgba(255, 255, 255, 0.2); }
     
     </style>
 </head>
@@ -342,9 +418,15 @@
         <button id="btnLogin" onclick="login()">تسجيل الدخول</button>
     </div>
 
-   <!-- شاشة المريض (تظهر فقط عند مسح الـ QR) -->
-    <div id="patientScreen" class="card hidden">
-        <div class="logo-placeholder">⚕</div>
+  <!-- 🌟 شاشة المريض (تظهر فقط عند مسح الـ QR) - التصميم الاحترافي الجديد 🌟 -->
+    <div id="patientScreen" class="card hidden" style="position: relative;">
+        
+        <!-- زر ملء الشاشة -->
+        <button id="fullscreen-btn" onclick="toggleFullScreen()">
+            <span>⛶</span> تكبير الشاشة
+        </button>
+
+        <div class="logo-placeholder" style="margin-top: 15px;">⚕</div>
         
         <div class="patient-header">
             <h2 id="patDocNameTitle">
@@ -375,15 +457,15 @@
             <p style="color: var(--text-muted); font-size: 15px; margin-top: 20px; font-weight: 600;">يرجى التوجه إلى غرفة الطبيب فوراً.</p>
         </div>
 
-        <!-- معلومات المريض بنظام البطاقات (Cards) -->
+       <!-- معلومات المريض بنظام البطاقات (Cards) الاحترافية -->
         <div class="patient-info-grid">
             <div class="info-card">
-                <div class="info-card-icon">👤</div>
+                <div class="info-card-icon icon-user">👤</div>
                 <div class="info-card-label">اسم المراجع</div>
                 <div class="info-card-value" id="patNameDisplay">--</div>
             </div>
             <div class="info-card">
-                <div class="info-card-icon">🔢</div>
+                <div class="info-card-icon icon-num">🔢</div>
                 <div class="info-card-label">رقم الحجز</div>
                 <div class="info-card-value seq-value" id="patSeqDisplay">--</div>
             </div>
@@ -1322,6 +1404,30 @@
             }
         });
     }
+
+// 🌟 دالة التحكم في وضع ملء الشاشة 🌟
+    window.toggleFullScreen = function() {
+        if (!document.fullscreenElement && !document.mozFullScreenElement && 
+            !document.webkitFullscreenElement && !document.msFullscreenElement) {
+            // تفعيل ملء الشاشة
+            const docElm = document.documentElement;
+            if (docElm.requestFullscreen) { docElm.requestFullscreen(); }
+            else if (docElm.mozRequestFullScreen) { docElm.mozRequestFullScreen(); }
+            else if (docElm.webkitRequestFullScreen) { docElm.webkitRequestFullScreen(); }
+            else if (docElm.msRequestFullscreen) { docElm.msRequestFullscreen(); }
+            
+            document.getElementById('fullscreen-btn').innerHTML = "<span>⛶</span> تصغير";
+        } else {
+            // إلغاء ملء الشاشة
+            if (document.exitFullscreen) { document.exitFullscreen(); }
+            else if (document.mozCancelFullScreen) { document.mozCancelFullScreen(); }
+            else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+            else if (document.msExitFullscreen) { document.msExitFullscreen(); }
+            
+            document.getElementById('fullscreen-btn').innerHTML = "<span>⛶</span> تكبير الشاشة";
+        }
+    }
+    
 </script>
 </body>
 </html>
