@@ -241,9 +241,13 @@
 
     <!-- شاشة المريض (تظهر فقط عند مسح الـ QR) -->
    <!-- شاشة المريض (تظهر فقط عند مسح الـ QR) -->
+  <!-- شاشة المريض (تظهر فقط عند مسح الـ QR) -->
     <div id="patientScreen" class="card hidden">
         <div class="logo-placeholder">⚕</div>
-        <h2 id="patWelcomeMsg">أهلاً بك في العيادة</h2>
+        <!-- 💡 العنوان الجديد الذي سيعرض اسم الطبيب بخط كبير -->
+        <h2 id="patDocNameTitle" style="font-size: 22px; color: var(--text-main); margin-bottom: 25px; line-height: 1.4;">
+            أهلاً بك في العيادة
+        </h2>
         
         <div id="queueWaitingState">
             <p style="color: var(--success); font-size: 16px; font-weight: 700; margin-bottom: 5px;">المتواجدون حالياً قبلك</p>
@@ -252,9 +256,8 @@
                 <span class="queue-label">مراجعين</span>
             </div>
             
-            <!-- رسالة تحذيرية تظهر فقط إذا كان هناك متأخرون -->
             <div id="latePatientsWarning" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 10px; margin-top: 15px; display: none;">
-                <p style="color: var(--warning); font-size: 13px; font-weight: 600; margin: 0;">⚠️ ملاحظة: يوجد <span id="lateCountSpan" style="font-weight:bold; font-size:15px;">0</span> مراجعين متأخرين عن دورهم، قد يتم إدخالهم قبلك في حال قدومهم.</p>
+                <p style="color: var(--warning); font-size: 14px; font-weight: 700; margin: 0;">⚠️ يوجد <span id="lateCountSpan" style="font-size:16px;">0</span> مرضى متأخرين عن دورهم، قد يسبقوك إذا حضروا.</p>
             </div>
         </div>
 
@@ -634,22 +637,31 @@
     }
 
     // 🌟 الدالة الجديدة للتحقق مما إذا كان الزائر مريضاً يمسح الباركود 🌟
-   window.checkPatientQR = function() {
+  window.checkPatientQR = function() {
         const urlParams = new URLSearchParams(window.location.search);
         const isPatient = urlParams.get('patient');
         const clinicCode = urlParams.get('clinic');
         const docId = urlParams.get('doc');
         const bookingSeq = urlParams.get('seq');
+        // 💡 استخراج اسم الطبيب من الرابط
+        const dName = urlParams.get('dname');
 
         if (isPatient === 'true' && clinicCode && docId && bookingSeq) {
             showScreen('patientScreen');
             
+            // 💡 تحديث العنوان الترحيبي باسم الطبيب بخط أبيض كبير
+            if (dName) {
+                // فك التشفير وعرض الاسم
+                document.getElementById('patDocNameTitle').innerHTML = `أهلاً بك في عيادة<br><span style="color: white; font-size: 26px; font-weight: 800;">الدكتور ${decodeURIComponent(dName)}</span>`;
+            } else {
+                document.getElementById('patDocNameTitle').innerText = "أهلاً بك في العيادة";
+            }
+
             onValue(ref(db, `ClinicQueue/${clinicCode}/${docId}`), (snapshot) => {
                 if (snapshot.exists()) {
                     const queueData = snapshot.val();
                     let patientData = null;
 
-                    // البحث عن المريض الحالي في الطابور المرفوع
                     for(let k in queueData) {
                         if (String(queueData[k].sequence) === String(bookingSeq)) {
                             patientData = queueData[k];
@@ -658,27 +670,21 @@
                     }
 
                     if (patientData) {
-                        // عرض بيانات المريض
                         document.getElementById('patNameDisplay').innerText = patientData.patientName || 'بدون اسم';
                         document.getElementById('patSeqDisplay').innerText = patientData.sequence;
 
-                        // قراءة الأرقام الذكية التي جهزها السي شارب
                         let presentBeforeMe = patientData.presentBeforeMe || 0;
                         let lateBeforeMe = patientData.lateBeforeMe || 0;
 
                         if (presentBeforeMe === 0 && lateBeforeMe === 0) {
-                            // ليس أمامه أحد إطلاقاً (حان دوره)
                             document.getElementById('queueWaitingState').classList.add('hidden');
                             document.getElementById('queueTurnState').classList.remove('hidden');
                         } else {
-                            // يوجد أناس قبله (سواء متواجدين أو متأخرين)
                             document.getElementById('queueWaitingState').classList.remove('hidden');
                             document.getElementById('queueTurnState').classList.add('hidden');
                             
-                            // المتواجدون فعلياً في العيادة
                             document.getElementById('patPersonsAhead').innerText = presentBeforeMe;
                             
-                            // الغائبون/المتأخرون
                             const lateWarningDiv = document.getElementById('latePatientsWarning');
                             if (lateBeforeMe > 0) {
                                 document.getElementById('lateCountSpan').innerText = lateBeforeMe;
