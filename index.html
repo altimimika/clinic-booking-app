@@ -214,6 +214,97 @@
         .queue-number { font-size: 48px; font-weight: 800; color: var(--text-main); line-height: 1; }
         .queue-label { font-size: 14px; color: var(--text-muted); margin-top: 5px; font-weight: 600; }
         .patient-info-box { background: #030712; padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-top: 20px; }
+
+
+        /* 🌟 التنسيق الاحترافي الجديد لشاشة المريض 🌟 */
+        #patientScreen { 
+            padding: 30px 20px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            background: linear-gradient(180deg, #111827 0%, #080B13 100%);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .patient-header { margin-bottom: 25px; text-align: center; }
+        .patient-header h2 { margin-bottom: 5px; font-size: 16px; color: var(--text-muted); font-weight: 600; line-height: 1.6; }
+        .patient-header .doc-name { font-size: 26px; color: #ffffff; font-weight: 800; text-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+
+        .queue-wrapper { position: relative; margin: 15px 0; display: flex; flex-direction: column; align-items: center; width: 100%; }
+        
+        /* شريط العنوان الأخضر الأنيق */
+        .queue-subtitle { 
+            background: rgba(16, 185, 129, 0.1); color: var(--success); 
+            padding: 6px 18px; border-radius: 20px; font-size: 14px; font-weight: 700; 
+            margin-bottom: 20px; border: 1px solid rgba(16, 185, 129, 0.2); 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* تحسين الدائرة لتصبح أكثر عمقاً */
+        .queue-number-box {
+            background: radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, rgba(11, 15, 25, 0) 70%);
+            border: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 170px; height: 170px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 0 30px rgba(79, 70, 229, 0.3), inset 0 0 20px rgba(79, 70, 229, 0.2);
+        }
+        .queue-number { font-size: 60px; font-weight: 800; color: #ffffff; line-height: 1; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .queue-label { font-size: 15px; color: var(--text-muted); margin-top: 8px; font-weight: 600; }
+
+        /* رسالة التحذير العصرية */
+        .modern-alert {
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0.02) 100%);
+            border-right: 4px solid var(--warning);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin: 25px 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            text-align: right;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border-left: 1px solid rgba(255,255,255,0.02);
+            border-top: 1px solid rgba(255,255,255,0.02);
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+        }
+        .modern-alert-icon { font-size: 22px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+        .modern-alert-text { color: #fcd34d; font-size: 13px; font-weight: 600; margin: 0; line-height: 1.6; }
+        .modern-alert-text span { color: #ffffff; font-size: 16px; font-weight: 800; margin: 0 4px; }
+
+        /* شبكة معلومات المريض (بطاقات) */
+        .patient-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .info-card {
+            background: rgba(31, 41, 55, 0.6);
+            padding: 18px 12px;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        .info-card-icon { font-size: 22px; margin-bottom: 8px; opacity: 0.9; }
+        .info-card-label { font-size: 13px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; }
+        .info-card-value { font-size: 15px; color: #ffffff; font-weight: 800; text-align: center; }
+        .seq-value { font-size: 24px; color: var(--primary); text-shadow: 0 2px 8px rgba(79, 70, 229, 0.4); }
+
+        /* الدائرة الخضراء */
+        .queue-number-box.green-turn {
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(11, 15, 25, 0) 70%);
+            border-color: var(--success);
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.3), inset 0 0 20px rgba(16, 185, 129, 0.2);
+        }
+    
     </style>
 </head>
 <body>
@@ -251,38 +342,51 @@
         <button id="btnLogin" onclick="login()">تسجيل الدخول</button>
     </div>
 
-    <!-- شاشة المريض (تظهر فقط عند مسح الـ QR) -->
+   <!-- شاشة المريض (تظهر فقط عند مسح الـ QR) -->
     <div id="patientScreen" class="card hidden">
         <div class="logo-placeholder">⚕</div>
-        <!-- 💡 العنوان الجديد الذي سيعرض اسم الطبيب بخط كبير -->
-        <h2 id="patDocNameTitle" style="font-size: 22px; color: var(--text-main); margin-bottom: 25px; line-height: 1.4;">
-            أهلاً بك في العيادة
-        </h2>
         
-        <div id="queueWaitingState">
-            <p style="color: var(--success); font-size: 16px; font-weight: 700; margin-bottom: 5px;">المتواجدون حالياً قبلك</p>
+        <div class="patient-header">
+            <h2 id="patDocNameTitle">
+                أهلاً بك في عيادة<br><span class="doc-name">--</span>
+            </h2>
+        </div>
+        
+        <div id="queueWaitingState" class="queue-wrapper">
+            <div class="queue-subtitle">المتواجدون حالياً قبلك</div>
+            
             <div class="queue-number-box">
                 <span class="queue-number" id="patPersonsAhead">--</span>
                 <span class="queue-label">مراجعين</span>
             </div>
             
-            <div id="latePatientsWarning" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 10px; margin-top: 15px; display: none;">
-                <p style="color: var(--warning); font-size: 14px; font-weight: 700; margin: 0;">⚠️ يوجد <span id="lateCountSpan" style="font-size:16px;">0</span> مرضى متأخرين عن دورهم، قد يسبقوك إذا حضروا.</p>
+            <!-- رسالة التحذير بالتصميم الزجاجي العصري -->
+            <div id="latePatientsWarning" class="modern-alert" style="display: none;">
+                <div class="modern-alert-icon">⚠️</div>
+                <p class="modern-alert-text">يوجد <span id="lateCountSpan">0</span> مرضى متأخرين عن دورهم، قد يسبقوك إذا حضروا.</p>
             </div>
         </div>
 
-        <!-- 💡 شاشة الوصول للدور (دائرة خضراء مشعة) -->
-        <div id="queueTurnState" class="hidden">
-            <p style="color: var(--success); font-size: 16px; font-weight: 700; margin-bottom: 5px;">تفضل بالدخول</p>
+        <div id="queueTurnState" class="queue-wrapper hidden">
+            <div class="queue-subtitle" style="background: rgba(16, 185, 129, 0.15); border-color: var(--success);">تفضل بالدخول</div>
             <div class="queue-number-box green-turn">
-                <span style="font-size: 32px; font-weight: 800; color: var(--success); line-height: 1.2;">حان دورك<br>الآن</span>
+                <span style="font-size: 34px; font-weight: 800; color: var(--success); line-height: 1.3;">حان دورك<br>الآن</span>
             </div>
-            <p style="color: var(--text-muted); font-size: 14px; margin-top: 15px;">يرجى التوجه إلى غرفة الطبيب فوراً.</p>
+            <p style="color: var(--text-muted); font-size: 15px; margin-top: 20px; font-weight: 600;">يرجى التوجه إلى غرفة الطبيب فوراً.</p>
         </div>
 
-        <div class="patient-info-box">
-            <div style="margin-bottom: 8px;">👤 الاسم: <span id="patNameDisplay" style="color: white; font-weight: bold;">--</span></div>
-            <div>🔢 رقم الحجز: <span id="patSeqDisplay" style="color: white; font-weight: bold;">--</span></div>
+        <!-- معلومات المريض بنظام البطاقات (Cards) -->
+        <div class="patient-info-grid">
+            <div class="info-card">
+                <div class="info-card-icon">👤</div>
+                <div class="info-card-label">اسم المراجع</div>
+                <div class="info-card-value" id="patNameDisplay">--</div>
+            </div>
+            <div class="info-card">
+                <div class="info-card-icon">🔢</div>
+                <div class="info-card-label">رقم الحجز</div>
+                <div class="info-card-value seq-value" id="patSeqDisplay">--</div>
+            </div>
         </div>
     </div>
 
@@ -673,12 +777,12 @@
         if (isPatient === 'true' && clinicCode && docId && bookingSeq) {
             showScreen('patientScreen');
             
-            if (dName) {
-                document.getElementById('patDocNameTitle').innerHTML = `أهلاً بك في عيادة<br><span style="color: white; font-size: 26px; font-weight: 800;">الدكتور ${decodeURIComponent(dName)}</span>`;
+          if (dName) {
+                document.getElementById('patDocNameTitle').innerHTML = `أهلاً بك في عيادة<br><span class="doc-name">الدكتور ${decodeURIComponent(dName)}</span>`;
             } else {
-                document.getElementById('patDocNameTitle').innerText = "أهلاً بك في العيادة";
+                document.getElementById('patDocNameTitle').innerHTML = `أهلاً بك في<br><span class="doc-name">العيادة</span>`;
             }
-
+            
             onValue(ref(db, `ClinicQueue/${clinicCode}/${docId}`), (snapshot) => {
                 if (snapshot.exists()) {
                     const queueData = snapshot.val();
