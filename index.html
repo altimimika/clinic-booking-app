@@ -180,6 +180,28 @@
         .confirm-box p { margin: 0 0 20px 0; font-size: 16px; font-weight: 600; color: var(--text-main); }
         .confirm-btns { display: flex; gap: 10px; }
         .confirm-btns button { margin: 0; }
+
+        /* --- 🌟 تصميم شاشة المريض (تظهر فقط عند قراءة الـ QR) 🌟 --- */
+        #patientScreen { text-align: center; padding: 40px 20px; }
+        .queue-number-box {
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(59, 130, 246, 0.1));
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            width: 150px; height: 150px;
+            margin: 20px auto;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 0 30px rgba(79, 70, 229, 0.3);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(79, 70, 229, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+        }
+        .queue-number { font-size: 48px; font-weight: 800; color: var(--text-main); line-height: 1; }
+        .queue-label { font-size: 14px; color: var(--text-muted); margin-top: 5px; font-weight: 600; }
+        .patient-info-box { background: #030712; padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-top: 20px; }
+        .turn-now { color: var(--success); font-size: 24px; font-weight: 800; margin: 20px 0; animation: fadeIn 0.5s alternate infinite; }
     </style>
 </head>
 <body>
@@ -215,6 +237,31 @@
         <input type="password" id="loginPassword" placeholder="أدخل كلمة المرور">
         
         <button id="btnLogin" onclick="login()">تسجيل الدخول</button>
+    </div>
+
+    <!-- شاشة المريض (تظهر فقط عند مسح الـ QR) -->
+    <div id="patientScreen" class="card hidden">
+        <div class="logo-placeholder">⚕</div>
+        <h2 id="patWelcomeMsg">أهلاً بك في العيادة</h2>
+        
+        <div id="queueWaitingState">
+            <p style="color: var(--text-muted); font-size: 15px; font-weight: 600;">يتبقى أمامك</p>
+            <div class="queue-number-box">
+                <span class="queue-number" id="patPersonsAhead">--</span>
+                <span class="queue-label">مراجعين</span>
+            </div>
+            <p style="color: var(--warning); font-size: 14px;">يرجى الانتظار، سيتم تحديث هذه الشاشة تلقائياً.</p>
+        </div>
+
+        <div id="queueTurnState" class="hidden">
+            <div class="turn-now">🎉 حان دورك الآن!</div>
+            <p>تفضل بالدخول إلى غرفة الطبيب.</p>
+        </div>
+
+        <div class="patient-info-box">
+            <div style="margin-bottom: 8px;">👤 الاسم: <span id="patNameDisplay" style="color: white; font-weight: bold;">--</span></div>
+            <div>🔢 رقم الحجز: <span id="patSeqDisplay" style="color: white; font-weight: bold;">--</span></div>
+        </div>
     </div>
 
     <!-- شاشة السكرتير أو الإدارة -->
@@ -524,7 +571,10 @@
     }
 
     window.showScreen = function(screenId) {
-        ['loginScreen', 'secretaryScreen', 'doctorScreen'].forEach(id => document.getElementById(id).classList.add('hidden'));
+        ['loginScreen', 'secretaryScreen', 'doctorScreen', 'patientScreen'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.classList.add('hidden');
+        });
         document.getElementById(screenId).classList.remove('hidden');
     }
 
@@ -578,12 +628,78 @@
         }
     }
 
+    // 🌟 الدالة الجديدة للتحقق مما إذا كان الزائر مريضاً يمسح الباركود 🌟
+    window.checkPatientQR = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const isPatient = urlParams.get('patient');
+        const clinicCode = urlParams.get('clinic');
+        const docId = urlParams.get('doc');
+        const bookingSeq = urlParams.get('seq');
+
+        if (isPatient === 'true' && clinicCode && docId && bookingSeq) {
+            // إخفاء كل الشاشات وإظهار شاشة المريض
+            showScreen('patientScreen');
+            
+            // جلب بيانات الطابور بشكل حي ومباشر
+            onValue(ref(db, `ClinicQueue/${clinicCode}/${docId}`), (snapshot) => {
+                if (snapshot.exists()) {
+                    const queueData = snapshot.val();
+                    let queueArray = [];
+                    for(let k in queueData) queueArray.push(queueData[k]);
+                    
+                    // ترتيب الطابور حسب التسلسل
+                    queueArray.sort((a, b) => parseInt(a.sequence) - parseInt(b.sequence));
+
+                    // البحث عن المريض في الطابور
+                    let patientIndex = -1;
+                    let patientData = null;
+
+                    for (let i = 0; i < queueArray.length; i++) {
+                        if (String(queueArray[i].sequence) === String(bookingSeq)) {
+                            patientIndex = i;
+                            patientData = queueArray[i];
+                            break;
+                        }
+                    }
+
+                    if (patientData) {
+                        document.getElementById('patNameDisplay').innerText = patientData.patientName || 'بدون اسم';
+                        document.getElementById('patSeqDisplay').innerText = patientData.sequence;
+                        
+                        if (patientIndex === 0) {
+                            // المريض هو الأول في الطابور (حان دوره)
+                            document.getElementById('queueWaitingState').classList.add('hidden');
+                            document.getElementById('queueTurnState').classList.remove('hidden');
+                        } else if (patientIndex > 0) {
+                            // يوجد مرضى قبله
+                            document.getElementById('queueWaitingState').classList.remove('hidden');
+                            document.getElementById('queueTurnState').classList.add('hidden');
+                            document.getElementById('patPersonsAhead').innerText = patientIndex;
+                        }
+                    } else {
+                        // المريض غير موجود في الطابور (انتهى دوره أو لم يُضف)
+                        document.getElementById('queueWaitingState').innerHTML = `<p style="color: var(--success); font-weight: bold; margin-top:20px;">الرقم غير موجود في طابور الانتظار الحالي. إما أن دورك قد انتهى أو لم يتم تفعيل حجزك بعد.</p>`;
+                    }
+                } else {
+                    document.getElementById('queueWaitingState').innerHTML = `<p style="color: var(--text-muted); margin-top:20px;">لا يوجد طابور نشط حالياً.</p>`;
+                }
+            });
+            return true;
+        }
+        return false;
+    }
+
     window.onload = function() {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('doctorDateFilter').value = today;
         document.getElementById('secReviewDateFilter').value = today;
         document.getElementById('resDate').value = today;
-        checkAutoLogin();
+        
+        // التحقق أولاً مما إذا كان الرابط يخص مريضاً يمسح الكود
+        if (!checkPatientQR()) {
+            // إذا لم يكن مريضاً، نفذ فحص الدخول التلقائي للطبيب والسكرتير
+            checkAutoLogin();
+        }
         
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
@@ -841,7 +957,6 @@
         const file = event.target.files[0];
         if (!file || !activeUploadVisitId) return;
 
-        // 🛑 إضافة قيد الحجم الأقصى (5 ميجابايت)
         const maxSizeInMB = 5;
         const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
         
