@@ -30,22 +30,21 @@
             background-color: var(--bg-color); 
             color: var(--text-main);
             margin: 0; 
-            padding: 16px;
+            padding: 12px;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .container { width: 100%; max-width: 480px; margin: 0 auto; padding-bottom: 40px; }
+        .container { width: 100%; max-width: 440px; margin: 0 auto; }
 
         .card {
             background-color: var(--card-bg); 
             border-radius: var(--radius-lg);
-            padding: 24px; 
+            padding: 20px; 
             border: 1px solid var(--border-color);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
-            margin-bottom: 20px; 
             animation: fadeIn 0.3s ease-out;
         }
 
@@ -55,14 +54,14 @@
         }
         
         h2 { 
-            text-align: center; color: var(--text-main); font-size: 20px; font-weight: 700;
-            margin-top: 0; margin-bottom: 20px; letter-spacing: -0.5px;
+            text-align: center; color: var(--text-main); font-size: 19px; font-weight: 700;
+            margin-top: 0; margin-bottom: 16px; letter-spacing: -0.5px;
         }
         
         .logo-placeholder {
-            width: 64px; height: 64px; background: linear-gradient(135deg, #4F46E5, #3B82F6); 
-            border-radius: 20px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;
-            font-size: 28px; box-shadow: 0 8px 16px rgba(79, 70, 229, 0.3);
+            width: 52px; height: 52px; background: linear-gradient(135deg, #4F46E5, #3B82F6); 
+            border-radius: 16px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center;
+            font-size: 24px; box-shadow: 0 8px 16px rgba(79, 70, 229, 0.3);
         }
         
         label { display: block; margin-bottom: 6px; font-weight: 600; color: var(--text-muted); font-size: 13px; }
@@ -181,214 +180,148 @@
         .confirm-btns { display: flex; gap: 10px; }
         .confirm-btns button { margin: 0; }
 
-        /* --- 🌟 تصميم شاشة المريض (تظهر فقط عند قراءة الـ QR) 🌟 --- */
-        #patientScreen { text-align: center; padding: 40px 20px; }
-        .queue-number-box {
-            background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(59, 130, 246, 0.1));
-            border: 2px solid var(--primary);
-            border-radius: 50%;
-            width: 150px; height: 150px;
-            margin: 20px auto;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            box-shadow: 0 0 30px rgba(79, 70, 229, 0.3);
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
-            70% { box-shadow: 0 0 0 20px rgba(79, 70, 229, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
-        }
-        
-        /* 💡 تأثير النبض الأخضر للدائرة عندما يحين الدور */
-        @keyframes pulseGreen {
-            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
-            70% { box-shadow: 0 0 0 20px rgba(16, 185, 129, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-        }
-        .queue-number-box.green-turn {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.2));
-            border-color: var(--success);
-            animation: pulseGreen 2s infinite;
-        }
-        
-        .queue-number { font-size: 48px; font-weight: 800; color: var(--text-main); line-height: 1; }
-        .queue-label { font-size: 14px; color: var(--text-muted); margin-top: 5px; font-weight: 600; }
-        .patient-info-box { background: #030712; padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-top: 20px; }
-
-
-        /* 🌟 التنسيق الاحترافي الجديد لشاشة المريض 🌟 */
+        /* --- 🌟 تصميم شاشة المريض (مضغوط، حديث بدون سكرول) 🌟 --- */
         #patientScreen { 
-            padding: 30px 20px; 
+            padding: 16px 14px; 
             display: flex; 
             flex-direction: column; 
             align-items: center;
-            background: linear-gradient(180deg, #111827 0%, #080B13 100%);
-            border: 1px solid rgba(255,255,255,0.05);
+            background: linear-gradient(180deg, #111827 0%, #070A11 100%);
+            border: 1px solid rgba(255,255,255,0.06);
+            position: relative;
         }
         
-        .patient-header { margin-bottom: 25px; text-align: center; }
-        .patient-header h2 { margin-bottom: 5px; font-size: 16px; color: var(--text-muted); font-weight: 600; line-height: 1.6; }
-        .patient-header .doc-name { font-size: 26px; color: #ffffff; font-weight: 800; text-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .patient-header { margin-bottom: 10px; text-align: center; }
+        .patient-header h2 { margin: 0; font-size: 13px; color: var(--text-muted); font-weight: 500; line-height: 1.4; }
+        .patient-header .doc-name { font-size: 21px; color: #ffffff; font-weight: 800; display: block; margin-top: 2px; }
 
-        .queue-wrapper { position: relative; margin: 15px 0; display: flex; flex-direction: column; align-items: center; width: 100%; }
+        .queue-wrapper { position: relative; margin: 4px 0 8px 0; display: flex; flex-direction: column; align-items: center; width: 100%; }
         
-        /* شريط العنوان الأخضر الأنيق */
         .queue-subtitle { 
             background: rgba(16, 185, 129, 0.1); color: var(--success); 
-            padding: 6px 18px; border-radius: 20px; font-size: 14px; font-weight: 700; 
-            margin-bottom: 20px; border: 1px solid rgba(16, 185, 129, 0.2); 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; 
+            margin-bottom: 12px; border: 1px solid rgba(16, 185, 129, 0.2); 
         }
 
-        /* تحسين الدائرة لتصبح أكثر عمقاً */
         .queue-number-box {
             background: radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, rgba(11, 15, 25, 0) 70%);
             border: 3px solid var(--primary);
             border-radius: 50%;
-            width: 170px; height: 170px;
+            width: 140px; height: 140px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            box-shadow: 0 0 30px rgba(79, 70, 229, 0.3), inset 0 0 20px rgba(79, 70, 229, 0.2);
+            box-shadow: 0 0 25px rgba(79, 70, 229, 0.25), inset 0 0 15px rgba(79, 70, 229, 0.2);
+            animation: pulse 2s infinite;
         }
-        .queue-number { font-size: 60px; font-weight: 800; color: #ffffff; line-height: 1; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        .queue-label { font-size: 15px; color: var(--text-muted); margin-top: 8px; font-weight: 600; }
 
-        /* رسالة التحذير العصرية */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4), inset 0 0 15px rgba(79, 70, 229, 0.2); }
+            70% { box-shadow: 0 0 0 15px rgba(79, 70, 229, 0), inset 0 0 15px rgba(79, 70, 229, 0.2); }
+            100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0), inset 0 0 15px rgba(79, 70, 229, 0.2); }
+        }
+
+        @keyframes pulseGreen {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5), inset 0 0 15px rgba(16, 185, 129, 0.2); }
+            70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0), inset 0 0 15px rgba(16, 185, 129, 0.2); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0), inset 0 0 15px rgba(16, 185, 129, 0.2); }
+        }
+        
+        .queue-number-box.green-turn {
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(11, 15, 25, 0) 70%);
+            border-color: var(--success);
+            animation: pulseGreen 2s infinite;
+        }
+
+        .queue-number { font-size: 52px; font-weight: 800; color: #ffffff; line-height: 1; }
+        .queue-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; font-weight: 600; }
+
         .modern-alert {
-            background: linear-gradient(90deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0.02) 100%);
-            border-right: 4px solid var(--warning);
-            border-radius: 12px;
-            padding: 14px 16px;
-            margin: 25px 0 10px 0;
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.02) 100%);
+            border-right: 3px solid var(--warning);
+            border-radius: 10px;
+            padding: 8px 12px;
+            margin-top: 10px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
             width: 100%;
             text-align: right;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            border-left: 1px solid rgba(255,255,255,0.02);
             border-top: 1px solid rgba(255,255,255,0.02);
             border-bottom: 1px solid rgba(255,255,255,0.02);
         }
-        .modern-alert-icon { font-size: 22px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
-        .modern-alert-text { color: #fcd34d; font-size: 13px; font-weight: 600; margin: 0; line-height: 1.6; }
-        .modern-alert-text span { color: #ffffff; font-size: 16px; font-weight: 800; margin: 0 4px; }
+        .modern-alert-icon { font-size: 17px; }
+        .modern-alert-text { color: #fcd34d; font-size: 12px; font-weight: 600; margin: 0; line-height: 1.4; }
+        .modern-alert-text span { color: #ffffff; font-size: 14px; font-weight: 800; }
 
-      /* 🌟 شبكة معلومات المريض (بطاقات احترافية جداً) 🌟 */
-        .patient-info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+        /* 🌟 كارد المريض الأفقي المدمج والأنيق 🌟 */
+        .patient-card-streamlined {
             width: 100%;
-            margin-top: 20px;
-        }
-        
-        .info-card {
-            background: linear-gradient(135deg, rgba(31, 41, 55, 0.7) 0%, rgba(17, 24, 39, 0.8) 100%);
-            padding: 20px 12px;
-            border-radius: 20px; /* زوايا أكثر نعومة */
+            background: linear-gradient(135deg, rgba(31, 41, 55, 0.6) 0%, rgba(17, 24, 39, 0.7) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 14px;
+            padding: 8px 14px;
+            margin-top: 10px;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            border: 1px solid rgba(255,255,255,0.08); /* حدود أنيقة */
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2), inset 0 2px 5px rgba(255,255,255,0.03); /* ظل خارجي وإضاءة داخلية خفيفة */
-            backdrop-filter: blur(12px);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
-        /* تأثير إضاءة خفيفة عند الحافة العلوية للبطاقة */
-        .info-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 10%; width: 80%; height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        .patient-meta-side {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        /* تفاعل البطاقة عند اللمس/المرور */
-        .info-card:hover, .info-card:active {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 25px rgba(0,0,0,0.3), 0 0 15px rgba(79, 70, 229, 0.2);
-            border-color: rgba(79, 70, 229, 0.4);
-        }
-
-        /* الأيقونات بخلفية دائرية متوهجة */
-        .info-card-icon { 
-            font-size: 20px; 
-            margin-bottom: 12px; 
-            background: rgba(255,255,255,0.05);
-            width: 45px; height: 45px;
-            border-radius: 50%;
+        .patient-avatar-mini {
+            width: 38px; height: 38px;
+            background: rgba(79, 70, 229, 0.15);
+            border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-        
-        .info-card:hover .info-card-icon {
-            transform: scale(1.1) rotate(5deg);
+            font-size: 18px; color: #818CF8;
+            border: 1px solid rgba(79, 70, 229, 0.3);
         }
 
-        /* أيقونة المريض */
-        .icon-user { color: #60A5FA; background: rgba(96, 165, 250, 0.15); box-shadow: 0 0 15px rgba(96, 165, 250, 0.2); }
-        /* أيقونة الرقم */
-        .icon-num { color: #10B981; background: rgba(16, 185, 129, 0.15); box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
+        .patient-name-container { text-align: right; }
+        .patient-meta-label { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+        .patient-meta-name { font-size: 14px; color: #ffffff; font-weight: 700; margin-top: 1px; }
 
-        .info-card-label { 
-            font-size: 13px; 
-            color: #9CA3AF; 
-            font-weight: 600; 
-            margin-bottom: 8px; 
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .info-card-value { 
-            font-size: 16px; 
-            color: #ffffff; 
-            font-weight: 800; 
+        .patient-seq-badge {
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 10px;
+            padding: 4px 12px;
             text-align: center;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        /* 💡 لون رقم الحجز الجديد (أخضر زمردي مشع بدلاً من البنفسجي) */
-        .seq-value { 
-            font-size: 28px; 
-            color: #10B981; /* أخضر زمردي فاقع */
-            text-shadow: 0 2px 10px rgba(16, 185, 129, 0.4); 
-            line-height: 1;
         }
 
-        /* 🌟 تنسيقات زر ملء الشاشة 🌟 */
+        .patient-seq-title { font-size: 10px; color: #6EE7B7; font-weight: 600; }
+        .patient-seq-number { font-size: 19px; color: #10B981; font-weight: 800; line-height: 1.1; }
+
+        /* زر ملء الشاشة */
         #fullscreen-btn {
             position: absolute;
-            top: 15px;
-            left: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 13px;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #E5E7EB;
+            padding: 5px 9px;
+            border-radius: 7px;
+            font-size: 11px;
             font-weight: 600;
             cursor: pointer;
-            backdrop-filter: blur(5px);
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             transition: var(--transition);
-            z-index: 100;
+            z-index: 10;
         }
-        #fullscreen-btn:hover { background: rgba(255, 255, 255, 0.2); }
-    
+        #fullscreen-btn:hover { background: rgba(255, 255, 255, 0.16); }
     </style>
 </head>
 <body>
 
-<!-- 🌟 عنصر الإشعار التوست 🌟 -->
 <div id="customToast">تمت العملية بنجاح!</div>
 
-<!-- 🌟 عنصر نافذة التأكيد المخصصة 🌟 -->
 <div id="customConfirmOverlay">
     <div class="confirm-box">
         <p id="confirmMessage">هل أنت متأكد من تنفيذ هذا الإجراء؟</p>
@@ -418,15 +351,13 @@
         <button id="btnLogin" onclick="login()">تسجيل الدخول</button>
     </div>
 
-  <!-- 🌟 شاشة المريض (تظهر فقط عند مسح الـ QR) - التصميم الاحترافي الجديد 🌟 -->
-    <div id="patientScreen" class="card hidden" style="position: relative;">
-        
-        <!-- زر ملء الشاشة -->
+    <!-- 🌟 شاشة المريض (تظهر فقط عند مسح الـ QR) 🌟 -->
+    <div id="patientScreen" class="card hidden">
         <button id="fullscreen-btn" onclick="toggleFullScreen()">
-            <span>⛶</span> تكبير الشاشة
+            <span>⛶</span> شاشة كاملة
         </button>
 
-        <div class="logo-placeholder" style="margin-top: 15px;">⚕</div>
+        <div class="logo-placeholder">⚕</div>
         
         <div class="patient-header">
             <h2 id="patDocNameTitle">
@@ -442,7 +373,6 @@
                 <span class="queue-label">مراجعين</span>
             </div>
             
-            <!-- رسالة التحذير بالتصميم الزجاجي العصري -->
             <div id="latePatientsWarning" class="modern-alert" style="display: none;">
                 <div class="modern-alert-icon">⚠️</div>
                 <p class="modern-alert-text">يوجد <span id="lateCountSpan">0</span> مرضى متأخرين عن دورهم، قد يسبقوك إذا حضروا.</p>
@@ -452,22 +382,23 @@
         <div id="queueTurnState" class="queue-wrapper hidden">
             <div class="queue-subtitle" style="background: rgba(16, 185, 129, 0.15); border-color: var(--success);">تفضل بالدخول</div>
             <div class="queue-number-box green-turn">
-                <span style="font-size: 34px; font-weight: 800; color: var(--success); line-height: 1.3;">حان دورك<br>الآن</span>
+                <span style="font-size: 30px; font-weight: 800; color: var(--success); line-height: 1.2; text-align: center;">حان دورك<br>الآن</span>
             </div>
-            <p style="color: var(--text-muted); font-size: 15px; margin-top: 20px; font-weight: 600;">يرجى التوجه إلى غرفة الطبيب فوراً.</p>
+            <p style="color: var(--text-muted); font-size: 13px; margin: 10px 0 0 0; font-weight: 600;">يرجى التوجه إلى غرفة الطبيب فوراً.</p>
         </div>
 
-       <!-- معلومات المريض بنظام البطاقات (Cards) الاحترافية -->
-        <div class="patient-info-grid">
-            <div class="info-card">
-                <div class="info-card-icon icon-user">👤</div>
-                <div class="info-card-label">اسم المراجع</div>
-                <div class="info-card-value" id="patNameDisplay">--</div>
+        <!-- 🌟 كارد المريض المدمج بدلاً من المربعات المتباعدة 🌟 -->
+        <div class="patient-card-streamlined">
+            <div class="patient-meta-side">
+                <div class="patient-avatar-mini">👤</div>
+                <div class="patient-name-container">
+                    <div class="patient-meta-label">اسم المراجع</div>
+                    <div class="patient-meta-name" id="patNameDisplay">--</div>
+                </div>
             </div>
-            <div class="info-card">
-                <div class="info-card-icon icon-num">🔢</div>
-                <div class="info-card-label">رقم الحجز</div>
-                <div class="info-card-value seq-value" id="patSeqDisplay">--</div>
+            <div class="patient-seq-badge">
+                <div class="patient-seq-title">رقم الحجز</div>
+                <div class="patient-seq-number" id="patSeqDisplay">--</div>
             </div>
         </div>
     </div>
@@ -578,7 +509,7 @@
 <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelected(event)">
 <input type="file" id="galleryInput" accept="image/*,application/pdf" class="hidden" onchange="handleFileSelected(event)">
 
-<!-- نافذة منبثقة لتعديل الحجز مباشرة للطبيب -->
+<!-- نافذة منبثقة لتعديل الحجز -->
 <div id="doctorEditCard" class="card hidden">
     <h2>تعديل بيانات الحجز</h2>
     <input type="hidden" id="docEditKey" value="">
@@ -814,7 +745,7 @@
         }
     }
 
-    // 🌟 الدالة الجديدة للتحقق مما إذا كان الزائر مريضاً يمسح الباركود 🌟
+    // 🌟 دالة قراءة الـ QR والتحديث الحي لشاشة المريض 🌟
     window.checkPatientQR = function() {
         const urlParams = new URLSearchParams(window.location.search);
         const isPatient = urlParams.get('patient');
@@ -823,10 +754,8 @@
         const bookingSeq = urlParams.get('seq');
         const dName = urlParams.get('dname');
 
-        // 💡 متغير لضمان تشغيل النغمة مرة واحدة فقط
         let turnSoundPlayed = false;
 
-        // 💡 دالة توليد النغمة
         const playAlertSound = () => {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -859,12 +788,12 @@
         if (isPatient === 'true' && clinicCode && docId && bookingSeq) {
             showScreen('patientScreen');
             
-          if (dName) {
+            if (dName) {
                 document.getElementById('patDocNameTitle').innerHTML = `أهلاً بك في عيادة<br><span class="doc-name">الدكتور ${decodeURIComponent(dName)}</span>`;
             } else {
                 document.getElementById('patDocNameTitle').innerHTML = `أهلاً بك في<br><span class="doc-name">العيادة</span>`;
             }
-            
+
             onValue(ref(db, `ClinicQueue/${clinicCode}/${docId}`), (snapshot) => {
                 if (snapshot.exists()) {
                     const queueData = snapshot.val();
@@ -881,12 +810,11 @@
                         document.getElementById('patNameDisplay').innerText = patientData.patientName || 'بدون اسم';
                         document.getElementById('patSeqDisplay').innerText = patientData.sequence;
 
-                       let presentBeforeMe = Number(patientData.presentBeforeMe) || 0;
+                        let presentBeforeMe = Number(patientData.presentBeforeMe) || 0;
                         let lateBeforeMe = Number(patientData.lateBeforeMe) || 0;
 
-                        // 💡 التعديل هنا: الدائرة تصبح خضراء بمجرد أن المتواجدين = 0 (حتى لو كان هناك متأخرون غائبون)
                         if (presentBeforeMe === 0) {
-                            // 💡 حان الدور: أظهر الدائرة الخضراء وشغل النغمة
+                            // دور المريض
                             document.getElementById('queueWaitingState').classList.add('hidden');
                             document.getElementById('queueTurnState').classList.remove('hidden');
                             
@@ -895,23 +823,21 @@
                                 turnSoundPlayed = true;
                             }
                         } else {
-                            // 💡 ما زال ينتظر (يوجد متواجدون قبله)
+                            // في الانتظار
                             document.getElementById('queueWaitingState').classList.remove('hidden');
                             document.getElementById('queueTurnState').classList.add('hidden');
-                            
-                            turnSoundPlayed = false; // إعادة الضبط ليرن مستقبلاً
+                            turnSoundPlayed = false;
                             
                             document.getElementById('patPersonsAhead').innerText = presentBeforeMe;
                             
                             const lateWarningDiv = document.getElementById('latePatientsWarning');
                             if (lateBeforeMe > 0) {
                                 document.getElementById('lateCountSpan').innerText = lateBeforeMe;
-                                lateWarningDiv.style.display = 'block';
+                                lateWarningDiv.style.display = 'flex'; // الحفاظ على التنسيق
                             } else {
                                 lateWarningDiv.style.display = 'none';
                             }
                         }
-                       
                     } else {
                         document.getElementById('queueWaitingState').innerHTML = `<p style="color: var(--success); font-weight: bold; margin-top:20px;">الرقم غير موجود في طابور الانتظار الحالي. إما أن دورك قد انتهى أو لم يتم تفعيل حجزك بعد.</p>`;
                     }
@@ -1405,11 +1331,10 @@
         });
     }
 
-// 🌟 دالة التحكم في وضع ملء الشاشة 🌟
+    // 🌟 دالة التحكم في وضع ملء الشاشة 🌟
     window.toggleFullScreen = function() {
         if (!document.fullscreenElement && !document.mozFullScreenElement && 
             !document.webkitFullscreenElement && !document.msFullscreenElement) {
-            // تفعيل ملء الشاشة
             const docElm = document.documentElement;
             if (docElm.requestFullscreen) { docElm.requestFullscreen(); }
             else if (docElm.mozRequestFullScreen) { docElm.mozRequestFullScreen(); }
@@ -1418,16 +1343,14 @@
             
             document.getElementById('fullscreen-btn').innerHTML = "<span>⛶</span> تصغير";
         } else {
-            // إلغاء ملء الشاشة
             if (document.exitFullscreen) { document.exitFullscreen(); }
             else if (document.mozCancelFullScreen) { document.mozCancelFullScreen(); }
             else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
             else if (document.msExitFullscreen) { document.msExitFullscreen(); }
             
-            document.getElementById('fullscreen-btn').innerHTML = "<span>⛶</span> تكبير الشاشة";
+            document.getElementById('fullscreen-btn').innerHTML = "<span>⛶</span> شاشة كاملة";
         }
     }
-    
 </script>
 </body>
 </html>
