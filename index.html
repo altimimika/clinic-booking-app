@@ -198,7 +198,8 @@
             70% { box-shadow: 0 0 0 20px rgba(79, 70, 229, 0); }
             100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
         }
-       /* 💡 تأثير النبض الأخضر للدائرة عندما يحين الدور */
+        
+        /* 💡 تأثير النبض الأخضر للدائرة عندما يحين الدور */
         @keyframes pulseGreen {
             0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
             70% { box-shadow: 0 0 0 20px rgba(16, 185, 129, 0); }
@@ -209,12 +210,10 @@
             border-color: var(--success);
             animation: pulseGreen 2s infinite;
         }
-
         
         .queue-number { font-size: 48px; font-weight: 800; color: var(--text-main); line-height: 1; }
         .queue-label { font-size: 14px; color: var(--text-muted); margin-top: 5px; font-weight: 600; }
         .patient-info-box { background: #030712; padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-top: 20px; }
-        .turn-now { color: var(--success); font-size: 24px; font-weight: 800; margin: 20px 0; animation: fadeIn 0.5s alternate infinite; }
     </style>
 </head>
 <body>
@@ -253,8 +252,6 @@
     </div>
 
     <!-- شاشة المريض (تظهر فقط عند مسح الـ QR) -->
-   <!-- شاشة المريض (تظهر فقط عند مسح الـ QR) -->
-  <!-- شاشة المريض (تظهر فقط عند مسح الـ QR) -->
     <div id="patientScreen" class="card hidden">
         <div class="logo-placeholder">⚕</div>
         <!-- 💡 العنوان الجديد الذي سيعرض اسم الطبيب بخط كبير -->
@@ -274,9 +271,13 @@
             </div>
         </div>
 
+        <!-- 💡 شاشة الوصول للدور (دائرة خضراء مشعة) -->
         <div id="queueTurnState" class="hidden">
-            <div class="turn-now">🎉 حان دورك الآن!</div>
-            <p>تفضل بالدخول إلى غرفة الطبيب.</p>
+            <p style="color: var(--success); font-size: 16px; font-weight: 700; margin-bottom: 5px;">تفضل بالدخول</p>
+            <div class="queue-number-box green-turn">
+                <span style="font-size: 32px; font-weight: 800; color: var(--success); line-height: 1.2;">حان دورك<br>الآن</span>
+            </div>
+            <p style="color: var(--text-muted); font-size: 14px; margin-top: 15px;">يرجى التوجه إلى غرفة الطبيب فوراً.</p>
         </div>
 
         <div class="patient-info-box">
@@ -289,7 +290,6 @@
     <div id="secretaryScreen" class="card hidden">
         <div id="welcomeSec" style="color: var(--success); font-weight: 600; margin-bottom: 12px; text-align: center; font-size: 14px;"></div>
         
-        <!-- اختيار الطبيب في أعلى الصفحة ليفرض نفسه على جميع التبويبات -->
         <div style="background: #030712; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-md); margin-bottom: 16px;">
             <label style="color: var(--primary);">اختر الطبيب المعالج (أساسي):</label>
             <select id="secretaryDoctorSelect" onchange="onSecretaryDoctorChanged()" required style="margin-bottom: 0;">
@@ -388,7 +388,7 @@
 
 </div>
 
-<!-- نوافذ الإدخال المخفية للرفع المباشر (كاميرا أو ملفات) -->
+<!-- نوافذ الإدخال المخفية للرفع المباشر -->
 <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelected(event)">
 <input type="file" id="galleryInput" accept="image/*,application/pdf" class="hidden" onchange="handleFileSelected(event)">
 
@@ -396,25 +396,12 @@
 <div id="doctorEditCard" class="card hidden">
     <h2>تعديل بيانات الحجز</h2>
     <input type="hidden" id="docEditKey" value="">
-    
-    <label>التاريخ:</label>
-    <input type="date" id="docEditDate">
-
-    <label>التسلسل:</label>
-    <input type="number" id="docEditSeq">
-
-    <label>الوقت:</label>
-    <input type="time" id="docEditTime">
-
-    <label>اسم المريض:</label>
-    <input type="text" id="docEditName">
-
-    <label>رقم الهاتف:</label>
-    <input type="tel" id="docEditPhone">
-
-    <label>ملاحظات:</label>
-    <input type="text" id="docEditNotes">
-
+    <label>التاريخ:</label> <input type="date" id="docEditDate">
+    <label>التسلسل:</label> <input type="number" id="docEditSeq">
+    <label>الوقت:</label> <input type="time" id="docEditTime">
+    <label>اسم المريض:</label> <input type="text" id="docEditName">
+    <label>رقم الهاتف:</label> <input type="tel" id="docEditPhone">
+    <label>ملاحظات:</label> <input type="text" id="docEditNotes">
     <button onclick="saveDoctorBookingEdit()" style="background-color: var(--success); margin-top: 10px;">💾 حفظ التعديلات</button>
     <button onclick="closeDoctorEditModal()" style="background-color: #374151;">إلغاء</button>
 </div>
@@ -438,7 +425,6 @@
     let secretaryQueueItems = [];
     let activeUploadVisitId = null;
 
-    // 🌟 دوال مساعدة للإشعارات والنوافذ المخصصة 🌟
     window.showToast = function(message, isError = false) {
         const toast = document.getElementById("customToast");
         toast.innerText = message;
@@ -465,7 +451,6 @@
     function formatTimeTo12Hour(timeStr) {
         if (!timeStr) return "---";
         let cleanTime = timeStr.trim();
-        
         if (/^\d{2}:\d{2}$/.test(cleanTime)) {
             let parts = cleanTime.split(':');
             let hours = parseInt(parts[0], 10);
@@ -475,16 +460,13 @@
             hours = hours ? hours : 12;
             return `${hours}:${minutes} ${period}`;
         }
-
         let parts = cleanTime.split(' ');
         let timePart = parts[0]; 
         let periodPart = parts[1] || ''; 
-
         let timeSegments = timePart.split(':');
         if (timeSegments.length >= 2) {
             let hours = parseInt(timeSegments[0], 10);
             let minutes = timeSegments[1];
-            
             if (!periodPart) {
                 periodPart = hours >= 12 ? 'م' : 'ص';
                 hours = hours % 12;
@@ -569,13 +551,10 @@
     window.loadDoctorsListForSecretary = function(usersObj) {
         clinicDoctorsList = usersObj;
         const secSelect = document.getElementById('secretaryDoctorSelect');
-        
         secSelect.innerHTML = '<option value="">اختر الطبيب المعالج...</option>';
-
         for (let key in usersObj) {
             let user = usersObj[key];
             let role = (user.Role || "").trim().toLowerCase();
-            
             if (role.includes("طبيب") || role.includes("doctor")) {
                 secSelect.innerHTML += `<option value="${user.DoctorID}">${user.FullName}</option>`;
             }
@@ -650,21 +629,51 @@
     }
 
     // 🌟 الدالة الجديدة للتحقق مما إذا كان الزائر مريضاً يمسح الباركود 🌟
-  window.checkPatientQR = function() {
+    window.checkPatientQR = function() {
         const urlParams = new URLSearchParams(window.location.search);
         const isPatient = urlParams.get('patient');
         const clinicCode = urlParams.get('clinic');
         const docId = urlParams.get('doc');
         const bookingSeq = urlParams.get('seq');
-        // 💡 استخراج اسم الطبيب من الرابط
         const dName = urlParams.get('dname');
+
+        // 💡 متغير لضمان تشغيل النغمة مرة واحدة فقط
+        let turnSoundPlayed = false;
+
+        // 💡 دالة توليد النغمة
+        const playAlertSound = () => {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (ctx.state === 'suspended') ctx.resume();
+
+                const osc1 = ctx.createOscillator();
+                const gain1 = ctx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(659.25, ctx.currentTime); 
+                gain1.gain.setValueAtTime(0.5, ctx.currentTime);
+                gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+                osc1.connect(gain1);
+                gain1.connect(ctx.destination);
+                osc1.start(ctx.currentTime);
+                osc1.stop(ctx.currentTime + 0.5);
+
+                const osc2 = ctx.createOscillator();
+                const gain2 = ctx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(523.25, ctx.currentTime + 0.4); 
+                gain2.gain.setValueAtTime(0.5, ctx.currentTime + 0.4);
+                gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.9);
+                osc2.connect(gain2);
+                gain2.connect(ctx.destination);
+                osc2.start(ctx.currentTime + 0.4);
+                osc2.stop(ctx.currentTime + 0.9);
+            } catch(e) { console.log("الصوت غير مدعوم أو محظور.", e); }
+        };
 
         if (isPatient === 'true' && clinicCode && docId && bookingSeq) {
             showScreen('patientScreen');
             
-            // 💡 تحديث العنوان الترحيبي باسم الطبيب بخط أبيض كبير
             if (dName) {
-                // فك التشفير وعرض الاسم
                 document.getElementById('patDocNameTitle').innerHTML = `أهلاً بك في عيادة<br><span style="color: white; font-size: 26px; font-weight: 800;">الدكتور ${decodeURIComponent(dName)}</span>`;
             } else {
                 document.getElementById('patDocNameTitle').innerText = "أهلاً بك في العيادة";
@@ -690,11 +699,20 @@
                         let lateBeforeMe = patientData.lateBeforeMe || 0;
 
                         if (presentBeforeMe === 0 && lateBeforeMe === 0) {
+                            // 💡 حان الدور: أظهر الدائرة الخضراء وشغل النغمة
                             document.getElementById('queueWaitingState').classList.add('hidden');
                             document.getElementById('queueTurnState').classList.remove('hidden');
+                            
+                            if (!turnSoundPlayed) {
+                                playAlertSound();
+                                turnSoundPlayed = true;
+                            }
                         } else {
+                            // 💡 ما زال ينتظر
                             document.getElementById('queueWaitingState').classList.remove('hidden');
                             document.getElementById('queueTurnState').classList.add('hidden');
+                            
+                            turnSoundPlayed = false; // إعادة الضبط ليرن مستقبلاً
                             
                             document.getElementById('patPersonsAhead').innerText = presentBeforeMe;
                             
@@ -724,9 +742,7 @@
         document.getElementById('secReviewDateFilter').value = today;
         document.getElementById('resDate').value = today;
         
-        // التحقق أولاً مما إذا كان الرابط يخص مريضاً يمسح الكود
         if (!checkPatientQR()) {
-            // إذا لم يكن مريضاً، نفذ فحص الدخول التلقائي للطبيب والسكرتير
             checkAutoLogin();
         }
         
