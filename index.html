@@ -634,7 +634,7 @@
     }
 
     // 🌟 الدالة الجديدة للتحقق مما إذا كان الزائر مريضاً يمسح الباركود 🌟
-    window.checkPatientQR = function() {
+   window.checkPatientQR = function() {
         const urlParams = new URLSearchParams(window.location.search);
         const isPatient = urlParams.get('patient');
         const clinicCode = urlParams.get('clinic');
@@ -642,47 +642,52 @@
         const bookingSeq = urlParams.get('seq');
 
         if (isPatient === 'true' && clinicCode && docId && bookingSeq) {
-            // إخفاء كل الشاشات وإظهار شاشة المريض
             showScreen('patientScreen');
             
-            // جلب بيانات الطابور بشكل حي ومباشر
             onValue(ref(db, `ClinicQueue/${clinicCode}/${docId}`), (snapshot) => {
                 if (snapshot.exists()) {
                     const queueData = snapshot.val();
-                    let queueArray = [];
-                    for(let k in queueData) queueArray.push(queueData[k]);
-                    
-                    // ترتيب الطابور حسب التسلسل
-                    queueArray.sort((a, b) => parseInt(a.sequence) - parseInt(b.sequence));
-
-                    // البحث عن المريض في الطابور
-                    let patientIndex = -1;
                     let patientData = null;
 
-                    for (let i = 0; i < queueArray.length; i++) {
-                        if (String(queueArray[i].sequence) === String(bookingSeq)) {
-                            patientIndex = i;
-                            patientData = queueArray[i];
+                    // البحث عن المريض الحالي في الطابور المرفوع
+                    for(let k in queueData) {
+                        if (String(queueData[k].sequence) === String(bookingSeq)) {
+                            patientData = queueData[k];
                             break;
                         }
                     }
 
                     if (patientData) {
+                        // عرض بيانات المريض
                         document.getElementById('patNameDisplay').innerText = patientData.patientName || 'بدون اسم';
                         document.getElementById('patSeqDisplay').innerText = patientData.sequence;
-                        
-                        if (patientIndex === 0) {
-                            // المريض هو الأول في الطابور (حان دوره)
+
+                        // قراءة الأرقام الذكية التي جهزها السي شارب
+                        let presentBeforeMe = patientData.presentBeforeMe || 0;
+                        let lateBeforeMe = patientData.lateBeforeMe || 0;
+
+                        if (presentBeforeMe === 0 && lateBeforeMe === 0) {
+                            // ليس أمامه أحد إطلاقاً (حان دوره)
                             document.getElementById('queueWaitingState').classList.add('hidden');
                             document.getElementById('queueTurnState').classList.remove('hidden');
-                        } else if (patientIndex > 0) {
-                            // يوجد مرضى قبله
+                        } else {
+                            // يوجد أناس قبله (سواء متواجدين أو متأخرين)
                             document.getElementById('queueWaitingState').classList.remove('hidden');
                             document.getElementById('queueTurnState').classList.add('hidden');
-                            document.getElementById('patPersonsAhead').innerText = patientIndex;
+                            
+                            // المتواجدون فعلياً في العيادة
+                            document.getElementById('patPersonsAhead').innerText = presentBeforeMe;
+                            
+                            // الغائبون/المتأخرون
+                            const lateWarningDiv = document.getElementById('latePatientsWarning');
+                            if (lateBeforeMe > 0) {
+                                document.getElementById('lateCountSpan').innerText = lateBeforeMe;
+                                lateWarningDiv.style.display = 'block';
+                            } else {
+                                lateWarningDiv.style.display = 'none';
+                            }
                         }
                     } else {
-                        // المريض غير موجود في الطابور (انتهى دوره أو لم يُضف)
                         document.getElementById('queueWaitingState').innerHTML = `<p style="color: var(--success); font-weight: bold; margin-top:20px;">الرقم غير موجود في طابور الانتظار الحالي. إما أن دورك قد انتهى أو لم يتم تفعيل حجزك بعد.</p>`;
                     }
                 } else {
