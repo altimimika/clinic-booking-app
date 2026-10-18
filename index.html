@@ -695,10 +695,11 @@
                         document.getElementById('patNameDisplay').innerText = patientData.patientName || 'بدون اسم';
                         document.getElementById('patSeqDisplay').innerText = patientData.sequence;
 
-                        let presentBeforeMe = patientData.presentBeforeMe || 0;
-                        let lateBeforeMe = patientData.lateBeforeMe || 0;
+                       let presentBeforeMe = Number(patientData.presentBeforeMe) || 0;
+                        let lateBeforeMe = Number(patientData.lateBeforeMe) || 0;
 
-                        if (presentBeforeMe === 0 && lateBeforeMe === 0) {
+                        // 💡 التعديل هنا: الدائرة تصبح خضراء بمجرد أن المتواجدين = 0 (حتى لو كان هناك متأخرون غائبون)
+                        if (presentBeforeMe === 0) {
                             // 💡 حان الدور: أظهر الدائرة الخضراء وشغل النغمة
                             document.getElementById('queueWaitingState').classList.add('hidden');
                             document.getElementById('queueTurnState').classList.remove('hidden');
@@ -708,7 +709,7 @@
                                 turnSoundPlayed = true;
                             }
                         } else {
-                            // 💡 ما زال ينتظر
+                            // 💡 ما زال ينتظر (يوجد متواجدون قبله)
                             document.getElementById('queueWaitingState').classList.remove('hidden');
                             document.getElementById('queueTurnState').classList.add('hidden');
                             
@@ -724,6 +725,7 @@
                                 lateWarningDiv.style.display = 'none';
                             }
                         }
+                       
                     } else {
                         document.getElementById('queueWaitingState').innerHTML = `<p style="color: var(--success); font-weight: bold; margin-top:20px;">الرقم غير موجود في طابور الانتظار الحالي. إما أن دورك قد انتهى أو لم يتم تفعيل حجزك بعد.</p>`;
                     }
